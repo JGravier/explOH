@@ -1,0 +1,25 @@
+{
+    "contents" : "",
+    "created" : 1476807022099.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "8DD2F7A2",
+    "lastKnownWriteTime" : 27866499440705583,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "0fui0zsk8p",
+        "caption" : "OH_geom_pl_source",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=OH_geom_pl_source&cache_key=0fui0zsk8p",
+        "displayedObservations" : 33,
+        "environment" : "",
+        "object" : "OH_geom_pl_source",
+        "totalObservations" : 33,
+        "variables" : 14
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

@@ -1,0 +1,10 @@
+OHpg$V_URB <- cut (OHpg$V_USAGE,
+                   breaks=c(1,20,30,40,50,60,70,80,90,100),
+                   labels=c(1,2,3,4,5,6,7,8,9),
+                   right=FALSE,
+                   include.lowest = TRUE)
+				   
+C:/Users/lue/Dropbox/1recherche/these/SIG/OH_FET/nouveau_procede/automatisation
+
+select cast (V_USAGE as text) from OH_points
+

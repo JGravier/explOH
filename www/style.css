@@ -1,0 +1,165 @@
+/*couleurs generales*/
+body {
+    /* sombre : background-color: #242426; */
+	background-color: #CDD2D4;
+    color : #F5F5F3;
+    font-family: 'Roboto', sans-serif;
+}
+
+a:link, a:visited {
+    color:#99a2a3;
+    text-decoration:none;
+}
+
+a:hover{
+	 color:#99a2a3;
+	text-decoration:underline;
+}
+
+/*titres et signature*/
+h1{
+	font-family: 'Josefin Sans', 'Roboto', sans-serif;
+	font-size: 60pt;
+	font-weight: 700;
+	line-height: 0.5
+}
+
+h3{
+margin-top: 5px;}
+
+ h4{
+	 text-indent: 95px;
+ }
+ 
+ 
+.signature{
+	font-size:11pt;
+	text-align: right;
+	color:#AAB4B5;
+	padding-right:20px;
+	line-height: 3;
+  }
+  
+  
+/* panneau information*/
+ 
+#bouton_info{
+	  position : absolute;
+	  right:20px;
+	  top: 50px
+  }
+  
+#bouton_info:hover{
+	background-color:#428bca;
+}
+
+#bouton_fermer{
+
+}
+
+#bouton_fermer:hover{
+	background-color:#428bca;
+}
+
+#information_panel{
+	background-color: #F5F5F3;
+	color: #99a2a3;
+	padding: 30px;
+	display:none;
+	margin-bottom: 20px;
+	border-radius: 10px;
+}
+
+.titre_info {
+	
+}
+
+
+  
+/* panneaux shiny */ 
+.well {
+   background-color: #AAB4B5;
+   border: 0px;
+   border-radius: 10px
+}
+
+.menu_gauche{
+	min-width:290px;
+}
+
+/*elements divers */
+.legend {
+ /* background-color: #111111;*/
+   font-size: 8pt;
+}
+
+
+#map{
+   border-radius: 10px;
+}
+
+#ohfreq {
+   background-color: #AAB4B5;
+   border-radius: 10px
+}
+
+.col-sm-11{
+  margin-right: 30px;
+  margin-left: 30px;
+}
+
+/*couleur boutons*/
+.btn-default {
+    color: #FFFFFF;
+    background-color: #9aa5a7;
+}
+.btn-default:hover{
+	color:#428bca;
+	background-color:#F5F5F3;
+	border-color:#428bca}
+
+/*couleurs et forme slider selection*/
+.irs-from, .irs-to, .irs-single{
+	background:#9aa5a7;
+}
+.irs-bar {
+border-top: 1px solid #9aa5a7;
+border-bottom: 1px solid #9aa5a7;
+background: #9aa5a7;
+}
+.irs-min, .irs-max {
+color: #FFFFFF;
+}
+.irs-slider {
+    top: 17px;
+    width: 13px; height: 13px;
+    border: 1px solid #AAA;
+    background: #DDD;
+    border-radius: 27px;
+    -moz-border-radius: 27px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+}
+#irs-active-slider, .irs-slider:hover {
+    background: #428bca;
+    /*border: 1px solid #428bca;*/
+}
+/* slider chiffres dessous*/
+.irs-grid-text{
+	color : #F5F5F3;
+	font-size: 11px;
+
+}
+.irs-grid-pol{
+	background-color : #F5F5F3
+}
+
+.irs-grid-pol.small{
+	background-color : #F5F5F3
+}
+
+/* popups */
+.leaflet-popup-content-wrapper {
+  color : #111111;
+}
+

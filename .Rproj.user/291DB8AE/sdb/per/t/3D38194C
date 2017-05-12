@@ -1,0 +1,18 @@
+{
+    "contents" : "#---- diminuer le temps d'affichage du plot nombre d'OH ----\n\n#longueur actuelle,avec facette sans sélection affichée\nlibrary(ggplotly)\nbenchplot(\nplot <- ggplot(data = m_fonction_an, aes(x=annee, y=value, fill=variable))+\n  geom_bar(stat = \"identity\",\n           width=1)+\n  scale_fill_manual(values=adjustcolor(palette, alpha.f=0.8))+\n  ggtitle(\"Nombre d'OH par année et par valeur urbaine\")+\n  xlab(\"année\")+\n  ylab(\"Nombre d'OH\")+\n  theme_hc()+\n  theme_facettes_clair()+\n  facet_wrap(~v_urb, nrow=2)\n)\nggplotly(plot)\n\nbenchplot(plot)\n\n#Avec ggvis : plus long ! + controle de la couleur doit être externalisé dans le DF\nlibrary(ggvis)#pas de faceting\nmax(m_fonction_an$value)\n\nm_fonction_an %>% \n  ggvis(x=~annee, y=~value, fill=~v_urb) %>% \n  # layer_points(fill=~factor(m_fonction_an$v_urb))\n  group_by(v_urb) %>% \n  layer_bars(strokeOpacity = 0)\n\n\n#avec plotly : # a combiner pour les futurs plots avec ggplot\nlibrary(plotly)\nplot_ly(m_fonction_an,\n        x=~annee, \n        y=~value, \n        color=~v_urb, \n        type='bar')\n\n\n\ntest <- subset(nb_fonction_an, nb_fonction_an$annee<=300 & nb_fonction_an$annee>=100)\nhead(test)\ncolnames(test) <-(c(\"v1\",\"v2\",\"v3\", \"v4\", \"v5\", \"v6\", \"annee\", \"somme\"))\nbenchplot(\n  \n  ggplot(data = m_fonction_an, aes(x=annee, y=value))+\n    geom_bar(data = m_fonction_an, \n             aes(x=annee, y=value, fill= m_fonction_an$value[annee<=300 & annee>=100,]),\n             stat=\"identity\", \n             width=1) +\n   \n    # scale_fill_manual(values= c(\"#CDD2D4\", adjustcolor(palette, alpha=0.8)))+\n    ggtitle(\"Nombre d'OH par année et par valeur urbaine\")+\n    xlab(\"année\")+\n    ylab(\"Nombre d'OH\")+\n\n    facet_wrap(~ v_urb, nrow=2)\n\n)\n \n",
+    "created" : 1476275077676.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2266741834",
+    "id" : "3D38194C",
+    "lastKnownWriteTime" : 1481041221,
+    "path" : "C:/Users/lue/Sync/1recherche/1these/SIG/VISU/visu_temps/shiny_3_2geom/tests.R",
+    "project_path" : "tests.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "type" : "r_source"
+}
