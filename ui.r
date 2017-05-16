@@ -27,7 +27,12 @@ shinyUI(fluidPage(
   h4("Plateforme d'exploration des Objets Historiques de la ville de Tours (base ToToPI)"),
   img(id="bouton_info", src='info.png'),
   
-  tags$div('id'="information_panel", source.info, img(id="bouton_fermer", src='fermer.png')),
+  tags$div(id="information_panel",
+    fluidRow( 
+      column(6, source.info),
+      column (6, source.usage)),
+    fluidRow(img(id="bouton_fermer", src='fermer.png'))
+    ),
   
   
   #panneau gauche
@@ -36,7 +41,7 @@ shinyUI(fluidPage(
    column(class="menu_gauche", 3,
            
            wellPanel( id="menu_temps",
-                      h3("Choix des bornes temporelles"), 
+                      h3("Sélection temporelle"), 
                       br(),
                       # slide temps
                       sliderInput("limites", label ="Choix de la période :", 
@@ -46,7 +51,7 @@ shinyUI(fluidPage(
                         textInput("borne_temps_1", label ="Borne min", value = NULL),
                         textInput("borne_temps_2", label="Borne max", value = NULL)
                       ),
-                      actionButton("selec_bornes_temps", label="Appliquer les bornes choisies")
+                      actionButton("selec_bornes_temps", label="Appliquer les bornes")
            ),
            
            wellPanel(id="menu_OH",
@@ -58,11 +63,6 @@ shinyUI(fluidPage(
                      actionButton("selec_OH", label="Afficher l'OH"),
                      actionButton("deselec_OH", label="Déselectionner"), #inline !
                      
-                     
-                     
-                     
-                     textInput("test", width= "33%", label="test", value = NULL),
-                     
                      # couleurs selon fonction, portée ou durée d'existance
                      radioButtons("couleur_OH", label = "Différencier les OH selon leur :", 
                                   choices = list("valeur urbaine" = "v_urb", 
@@ -73,7 +73,7 @@ shinyUI(fluidPage(
                      
                      
                      # fonctions à afficher
-                     checkboxGroupInput("choix_fonctions", label ="Fonctions à afficher :",
+                     checkboxGroupInput("choix_fonctions", label ="Activités à afficher :",
                                         choices = c("1.Voirie, aménagements"="1",
                                                     "2.Structures défensives et militaires"="2", 
                                                     "3.Constructions civiles"="3", 

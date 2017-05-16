@@ -134,12 +134,16 @@ m_fonction_an$v_urb <- cut (m_fonction_an$v_urb,
 
 
 #HTMLS
-source.info <- HTML("L'application \"explOH\" est développée par Lucie Nahassia dans le cadre de sa thèse de doctorat. </br>
-                    <titre_info></titre_info>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam nec libero suscipit, interdum eros sed, dapibus tellus. Vestibulum consectetur, dui nec finibus rhoncus, velit nisl tristique tellus, non ultrices sapien libero eu velit. Donec tempus finibus auctor. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Maecenas eleifend elit nisi, a rutrum enim maximus rutrum. Donec porttitor blandit finibus. Ut nisi nibh, bibendum a metus eget, vestibulum mattis est. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Phasellus ac elit a lectus sodales porta. Etiam convallis tristique quam vitae mollis. Integer sit amet ipsum eu urna gravida vestibulum et a augue. Etiam dapibus mauris diam, in ornare nulla gravida nec. Pellentesque pharetra enim tortor, sit amet auctor felis tincidunt sed. Nullam vitae ante eu nisi accumsan aliquam eget sit amet diam.
-                    Duis lobortis sagittis leo eget placerat. Proin lacinia gravida felis, eget venenatis felis euismod quis. Aenean rutrum tristique risus, lacinia scelerisque nunc placerat vel. Suspendisse eget elementum enim. Mauris vitae lacus velit. Aliquam porttitor imperdiet iaculis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Morbi at commodo enim. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Etiam lobortis urna orci, ut accumsan nisi lobortis vitae. Quisque porttitor augue est, vel ultricies sem sollicitudin sit amet. Suspendisse vestibulum erat eu tempus consequat. Etiam a arcu sit amet lectus dapibus suscipit et quis leo. 
-                    ")
+source.info <- HTML("<p class=\"titre_info\">Informations sur l'application : </p>
+L'application explOH permet d'explorer temporellement et spatialement les données \"Objets Historiques\" (OH) accompagnées de données de contextes, les \"ensembles urbains\" et les \"traits de rives\", provenant <a href=\"http://citeres.univ-tours.fr/spip.php?article504\", target=\"_blank\">SIG Topographie de Tours PréIndustrielle<a/>, développée au <a href=\"http://citeres.univ-tours.fr/spip.php?rubrique57\", target=\"_blank\">Laboratoire d'Archéologie Urbaine</a> à Tours (UMR 7324 CITERES).</br> </br>
+                    L'application est développée par <a href=\"http://www.parisgeo.cnrs.fr/spip.php?article6441\" target=\"_blank\">Lucie Nahassia</a> dans le cadre de sa thèse. Elle a pour objectif d'accompagner la lecture des analyses statistiques et spatiales développées au cours de ce travail en permettant au lecteur/utilisateur de naviguer par lui-même dans les données utilisées au niveau le plus élémentaire de l'individu topographique historique."
+)
 
+source.usage <-HTML("<p class=\"titre_info\">Utilisation de l'application :</p>
+Sur la <p class=\"stitre_info\">carte</p>, <img src=\"icone_leaflet.png\", alt=\"l'icône en haut à droite\"> permet de choisir différents fonds de carte et d'afficher ou non les données OH et les données contextuelles. </br> </br>
+                    Le panneau <p class=\"stitre_info\">Sélection temporelle</p> permet réduire la période temporelle pour laquelles les OH sont afffichés, à l'aide d'un slider ou en rentrant manuellement les dates minimum et maximum pour un contrôle plus précis. Une seule année peut être sélectionnée en choisissant la même date pour les bornes  minimum et maximum. </br> </br>
+                    Le panneau <p class=\"stitre_info\">Identification des OH</p> permet de retrouver un OH par son identifiant, de modifier l'affichage des OH en fonction de leurs différents attributs, et d'afficher seulement certains OH en fonction de leur attribut fonctionnel. </br>  </br>
+                    Le panneau <p class=\"stitre_info\"> éHIHIAHDIHAD </p> propose un résumé de la distribution des OH dans la période de temps sélectionnée.")
 
 source.signature <- HTML(
 '<p class="signature">',

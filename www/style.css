@@ -7,12 +7,12 @@ body {
 }
 
 a:link, a:visited {
-    color:#99a2a3;
+    color:#428bca;
     text-decoration:none;
 }
 
 a:hover{
-	 color:#99a2a3;
+	 color:#428bca;
 	text-decoration:underline;
 }
 
@@ -21,7 +21,8 @@ h1{
 	font-family: 'Josefin Sans', 'Roboto', sans-serif;
 	font-size: 60pt;
 	font-weight: 700;
-	line-height: 0.5
+	line-height: 0.5;
+	padding-top:10px;
 }
 
 h3{
@@ -54,7 +55,9 @@ margin-top: 5px;}
 }
 
 #bouton_fermer{
-
+position: absolute;
+right: 50%;
+margin-top:15px;
 }
 
 #bouton_fermer:hover{
@@ -67,13 +70,21 @@ margin-top: 5px;}
 	padding: 30px;
 	display:none;
 	margin-bottom: 20px;
+	padding-bottom: 60px;
 	border-radius: 10px;
 }
 
 .titre_info {
-	
+	font-size:20pt;
+	font-family:'Josefin Sans';
+	font-weight: 700
 }
 
+.stitre_info{
+	color:#434f51;
+	display:inline;
+
+}
 
   
 /* panneaux shiny */ 
@@ -84,7 +95,7 @@ margin-top: 5px;}
 }
 
 .menu_gauche{
-	min-width:290px;
+	min-width:200px;
 }
 
 /*elements divers */
