@@ -13,7 +13,7 @@ shinyServer(function(input, output, session) {
   #1. carte de base
   output$map <- renderLeaflet({
     leaflet() %>%
-      setView(lat=47.396248, lng=0.686614, zoom = 15) %>%
+      setView(lat=47.394211, lng=0.687247, zoom = 15) %>%
 
       ##tiles
       addProviderTiles("CartoDB.Positron", group="clair") %>%

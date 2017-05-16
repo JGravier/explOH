@@ -90,22 +90,22 @@ shinyUI(fluidPage(
     
     column(9,
            #carte
-           leafletOutput("map", height = "600px"),
-           br(),
+           leafletOutput("map", height = "600px")
+           #br(),
            
-           wellPanel(
-             
-            h3("Exploration graphique"),
-             
-           #plots
+           # wellPanel(
+           #   
+           #  h3("Exploration graphique"),
+           #   
+           # #plots
            # plotOutput("ohfreq", brush = brushOpts(id = "ohfreq_brush", direction = "x")), 
-           
-           # ajuster l'échelle y des plots ?
-           br(),
-           radioButtons("plot_echelle_y", label = "Uniformiser les échelles des graphes en ordonnées ?",
-                        choices = list("Oui"="fixed","Non"="free_y"),
-                        selected = "fixed",
-                        inline= TRUE))
+           # 
+           # # ajuster l'échelle y des plots ?
+           # br(),
+           # radioButtons("plot_echelle_y", label = "Uniformiser les échelles des graphes en ordonnées ?",
+           #              choices = list("Oui"="fixed","Non"="free_y"),
+           #              selected = "fixed",
+           #              inline= TRUE))
            
     ),
     
