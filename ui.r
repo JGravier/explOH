@@ -98,7 +98,7 @@ shinyUI(fluidPage(
             h3("Exploration graphique"),
              
            #plots
-           plotOutput("ohfreq", brush = brushOpts(id = "ohfreq_brush", direction = "x")), 
+           # plotOutput("ohfreq", brush = brushOpts(id = "ohfreq_brush", direction = "x")), 
            
            # ajuster l'échelle y des plots ?
            br(),
