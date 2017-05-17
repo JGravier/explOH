@@ -73,7 +73,7 @@ shinyUI(fluidPage(
                      
                      
                      # fonctions à afficher
-                     checkboxGroupInput("choix_fonctions", label ="Activités à afficher :",
+                     checkboxGroupInput("choix_fonctions", label ="Activités à afficher selon leurs valeurs urbaines :",
                                         choices = c("1.Voirie, aménagements"="1",
                                                     "2.Structures défensives et militaires"="2", 
                                                     "3.Constructions civiles"="3", 
