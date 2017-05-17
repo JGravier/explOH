@@ -24,7 +24,7 @@ library(RSQLite)
 library(rgdal)
 library(rgeos)
 
-source("charge_data.R", local=TRUE)
+source("charge_data.R", local=FALSE)
 
 
 #---- PALETTES ----
