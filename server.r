@@ -9,7 +9,7 @@ library(shiny)
 
 
 shinyServer(function(input, output, session) {
-
+  
   #1. carte de base
   output$map <- renderLeaflet({
     leaflet() %>%
@@ -26,7 +26,44 @@ shinyServer(function(input, output, session) {
         overlayGroups = c("géometries", "ensembles urbains", "traits de rive"),
         options=layersControlOptions(autoZIndex=TRUE)
       ) %>%
-      hideGroup(c("traits de rive","ensembles urbains"))
+      hideGroup(c("traits de rive","ensembles urbains")) %>% 
+      
+      ## OH de base :
+      addPolygons(data=OH_geom_pg_4326,
+                  stroke = TRUE,
+                  weight=1,
+                  opacity=0.7,
+                  color=~palette_fonctions(OH_geom_pg_4326@data$V_URB),
+                  group="géometries",
+                  popup=popup_pg_tout) %>%
+      addCircles(data=OH_geom_pt_4326,
+                 radius=10,
+                 color=~palette_fonctions(OH_geom_pt_4326@data$V_URB),
+                 stroke = FALSE,
+                 fillOpacity = 0.7,
+                 group="géometries",
+                 popup=popup_pt_tout) %>%
+      ## polyligne : uniquement voierie aménagement >> fait buguer quand on l'enlève > if ?
+      addPolylines(data=OH_geom_pl_4326,
+                   weight=1,
+                   color=~palette_fonctions(OH_geom_pl_4326@data$V_URB),
+                   opacity= 0.7,
+                   group="géometries",
+                   popup = popup_pl_tout) %>%
+      
+      addLegend(position="bottomlef", title = "Valeurs urbaines des OH", pal = palette_fonctions, values = OH_ponctuels_4326@data$V_URB, opacity = 1) %>%
+      
+      addPolygons(data=ens_urb,
+                  group="ensembles urbains",
+                  color="black",
+                  fill=FALSE,
+                  weight=2,
+                  popup=popup_ens_urb_tout) %>%
+      addPolylines(data=traits_rive,
+                   group="traits de rive",
+                   color="blue",#pointillés ?
+                   weight=3,
+                   popup=popup_traits_rive_tout)
 
   })
 
@@ -42,9 +79,15 @@ shinyServer(function(input, output, session) {
   ens_urb_subset <- reactiveValues(tab = NA)
   traits_rive_subset <- reactiveValues(tab = NA)
   #couleurs
-  legende <- reactiveValues(couleurs= NA, pal_legend= NA, val_legend= NA, title_legend=NA)
-
-
+  legende <- reactiveValues(
+    couleurs_pt = NA,
+    couleurs_pg = NA,
+    couleurs_pl= NA,
+    alpha_polygones = NA,
+    pal_legend = NA,
+    val_legend = NA,
+    title_legend = NA)
+    
   #3. INPUT > INPUT : Mise à jour slider temps selon autres éléments (graphes et élements textes)
   observe({
     req(input$ohfreq_brush$xmin,input$ohfreq_brush$xmax)
@@ -68,20 +111,20 @@ shinyServer(function(input, output, session) {
 
   ##contextes (temps)
   observe({
-    req(max(input$limites), min(input$limites))
+    # req(max(input$limites), min(input$limites))
     ens_urb_subset$tab <- subset(ens_urb, date_debut<=max(input$limites) & date_fin>=min(input$limites))
 
   })
 
   observe({
-    req(max(input$limites), min(input$limites))
+    # req(max(input$limites), min(input$limites))
     traits_rive_subset$tab <- subset(traits_rive, DEBUT<=max(input$limites) & FIN>=min(input$limites))
 
   })
 
   ##Objets Historiques (temps, fonctions)
   observe({
-    req(max(input$limites), min(input$limites), input$choix_fonctions)
+    # req(max(input$limites), min(input$limites), input$choix_fonctions)
 
     #quel que soit l'élément - temporel ou fonctionnel - qui change, tout le subset est recalculé
     OH_ponctuels_subset$tab <- subset(OH_ponctuels_4326, DATE_DEB<=max(input$limites) & DATE_FIN>=min(input$limites) & #temps
@@ -109,7 +152,7 @@ shinyServer(function(input, output, session) {
       legende$couleurs_pl <- ~palette_fonctions(OH_pl_subset$tab@data$V_URB)
       legende$alpha_polygones <- 0.7
       legende$pal_legend <- palette_fonctions
-      legende$val_legend <- OH_ponctuels_subset$tab@data$V_URB_NOM
+      legende$val_legend <- OH_ponctuels_subset$tab@data$V_URB
       legende$title_legend <- "Valeurs urbaines des OH"}
 
     else if (input$couleur_OH == "portee") # afficher selon portée

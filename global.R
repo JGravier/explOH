@@ -73,6 +73,14 @@ texte_popup_traits_rive <- function(df) {
         "<h5> <b> Trait de rive ", df@data$SELEC, "</b> </h5>(", df@data$DEBUT,"-",df@data$FIN,")")
 }
 
+
+#---- POPUP BASE ----
+popup_pg_tout <-texte_popup_OH(OH_geom_pg_4326)
+popup_pl_tout <-texte_popup_OH(OH_geom_pl_4326)
+popup_pt_tout <-texte_popup_OH(OH_geom_pt_4326)
+popup_ens_urb_tout <- texte_popup_ens_urb(ens_urb)
+popup_traits_rive_tout <- texte_popup_traits_rive(traits_rive)
+
 #---- GGPLOT THEMES ----
 
 #theme ggplot facette clair
