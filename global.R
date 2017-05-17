@@ -24,15 +24,17 @@ library(RSQLite)
 library(rgdal)
 library(rgeos)
 
+source("charge_data.R", local=TRUE)
+
 
 #---- PALETTES ----
 #VURB
 # palette_f <- c("#e72535", "#2fc6a0", "#ff9819", "#0a60b2", "#7d3ab9","#2ea949")
-palette_f <- c("#e72535", "#0a8eb1", "#f6b01a", "#2fc6a0", "#703ab9","#ff7919")
+palette_vurb <- c("#e72535", "#0a8eb1", "#f6b01a", "#2fc6a0", "#703ab9","#ff7919")
 # palette <- c("#E03535","#2C39E8","#29FF81","#E8D145","#FF9D4D","#3CE3E8")
 # palette_f <- brewer.pal(6,"Set1")
 #display.brewer.all()
-palette_fonctions <- colorFactor(palette_f, unique(OH_ponctuels_4326@data$V_URB))
+palette_fonctions <- colorFactor(palette_vurb, levels(OH_ponctuels_4326@data$V_URB_NOM))
 #PORTEE
 palette_p <-c("#febd2b", "#fe892f", "#ff5733", "#ff2b37")
 palette_portees <- colorFactor(palette_p, unique(OH_ponctuels_4326@data$PORTEE))

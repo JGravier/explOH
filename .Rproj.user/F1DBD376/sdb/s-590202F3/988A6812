@@ -1,14 +1,14 @@
 {
     "collab_server" : "",
-    "contents" : "leaflet() %>%\n## OH de base :\n  addPolygons(data=OH_geom_pg_4326,\n              stroke = TRUE,\n              weight=1,\n              opacity=0.7,\n              color=~palette_fonctions(OH_geom_pg_4326@data$V_URB),\n              group=\"géometries\",\n              popup=popup_pg_tout) %>%\n\n  addLegend(position=\"bottomlef\", title = \"Valeurs urbaines des OH\", pal = palette_fonctions, values = OH_ponctuels_4326@data$V_URB, \n            opacity = 1, labels=OH_ponctuels_4326@data$V_URB_NOM)\n\n\n\n\nnrow(subset(OH_ponctuels_4326, DATE_DEB<=max(100) & DATE_FIN>=min(50) & V_URB %in% c(3)))\nOH_ponctuels_4326[OH_ponctuels_4326$DATE_DEB<=max(100) & OH_ponctuels_4326$DATE_FIN>=min(50) & OH_ponctuels_4326$V_URB %in% c(3),]\n\nleaflet() %>% addTiles() %>% addLegend(\n  position = 'bottomright',\n  colors = rgb(t(col2rgb(palette())) / 255),\n  labels = palette(), opacity = 1,\n  title = 'An Obvious Legend'\n)\n\n\ncall(OH_geom_pg_4326$NOM_USAGE)\n\n",
+    "contents" : "leaflet() %>%\n## OH de base :\n  addPolygons(data=OH_geom_pg_4326,\n              stroke = TRUE,\n              weight=1,\n              opacity=0.7,\n              color=~palette_fonctions(OH_geom_pg_4326@data$V_URB),\n              group=\"géometries\",\n              popup=popup_pg_tout) %>%\n\n  addLegend(position=\"bottomlef\", title = \"Valeurs urbaines des OH\", pal = palette_fonctions, labels=grr(),values = OH_ponctuels_4326@data$V_URB, \n            opacity = 1)\n\n\n\nunique(OH_ponctuels_4326$V_URB_NOM)\n\nleaflet() %>% addTiles() %>% addLegend(\n  position = 'bottomright',\n  colors = rgb(t(col2rgb(palette())) / 255),\n  labels = palette(), opacity = 1,\n  title = 'An Obvious Legend'\n)\n(\n\ngrr <- palette()\ntest <- c('ba','bi','bo','bu','be','bun')\n\ndf = data.frame(x = rnorm(100), y = rexp(100, 2), z = runif(100))\npal = colorBin('PuOr', df$z, bins = c(0, .1, .4, .9, 1))\nleaflet(df) %>%\n  addCircleMarkers(~x, ~y, color = ~pal(z)) %>%\n  addLegend(pal = pal, values = ~z)\n\nleaflet(df) %>%\n  addCircleMarkers(~x, ~y, color = ~pal(z)) %>%\n  addLegend(pal = pal, values = ~z, labFormat = labelFormat(\n    prefix = '(', suffix = ')%', between = ', ',\n    transform = function(x) 100 * x\n  ))\n\n\n",
     "created" : 1495024490103.000,
     "dirty" : true,
     "encoding" : "",
     "folds" : "",
-    "hash" : "586985536",
+    "hash" : "248285131",
     "id" : "988A6812",
     "lastKnownWriteTime" : 28429419330863205,
-    "last_content_update" : 1495027611570,
+    "last_content_update" : 1495031995142,
     "path" : null,
     "project_path" : null,
     "properties" : {
