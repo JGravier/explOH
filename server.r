@@ -7,6 +7,9 @@
 #####
 library(shiny)
 
+#Import données
+source("charge_data.R", local=FALSE)
+
 
 shinyServer(function(input, output, session) {
   
@@ -17,16 +20,15 @@ shinyServer(function(input, output, session) {
 
       ##tiles
       addProviderTiles("CartoDB.Positron", group="clair") %>%
-      addProviderTiles("CartoDB.DarkMatter", group="sombre") %>%
       addProviderTiles("Esri.WorldImagery", group = "satellite") %>%
 
       ##layer control
       addLayersControl(
-        baseGroups = c("clair","sombre","satellite"),
+        baseGroups = c("clair", "satellite"),
         overlayGroups = c("géometries", "ensembles urbains", "traits de rive"),
         options=layersControlOptions(autoZIndex=TRUE)
       ) %>%
-      hideGroup(c("traits de rive","ensembles urbains")) %>% 
+      hideGroup(c("traits de rive","ensembles urbains"))  %>% 
       
       ## OH de base :
       addPolygons(data=OH_geom_pg_4326,
@@ -43,16 +45,15 @@ shinyServer(function(input, output, session) {
                  fillOpacity = 0.7,
                  group="géometries",
                  popup=popup_pt_tout) %>%
-      ## polyligne : uniquement voierie aménagement >> fait buguer quand on l'enlève > if ?
       addPolylines(data=OH_geom_pl_4326,
                    weight=1,
                    color=~palette_fonctions(OH_geom_pl_4326@data$V_URB),
                    opacity= 0.7,
                    group="géometries",
                    popup = popup_pl_tout) %>%
-      
+
       addLegend(position="bottomlef", title = "Valeurs urbaines des OH", pal = palette_fonctions, values = OH_ponctuels_4326@data$V_URB, opacity = 1) %>%
-      
+
       addPolygons(data=ens_urb,
                   group="ensembles urbains",
                   color="black",
@@ -112,13 +113,13 @@ shinyServer(function(input, output, session) {
   ##contextes (temps)
   observe({
     # req(max(input$limites), min(input$limites))
-    ens_urb_subset$tab <- subset(ens_urb, date_debut<=max(input$limites) & date_fin>=min(input$limites))
+    ens_urb_subset$tab <- ens_urb[ens_urb@data$date_debut<=max(input$limites) & ens_urb@data$date_fin>=min(input$limites),]
 
   })
 
   observe({
     # req(max(input$limites), min(input$limites))
-    traits_rive_subset$tab <- subset(traits_rive, DEBUT<=max(input$limites) & FIN>=min(input$limites))
+    traits_rive_subset$tab <- traits_rive[traits_rive@data$DEBUT<=max(input$limites) & traits_rive@data$FIN>=min(input$limites),]
 
   })
 
@@ -127,16 +128,19 @@ shinyServer(function(input, output, session) {
     # req(max(input$limites), min(input$limites), input$choix_fonctions)
 
     #quel que soit l'élément - temporel ou fonctionnel - qui change, tout le subset est recalculé
-    OH_ponctuels_subset$tab <- subset(OH_ponctuels_4326, DATE_DEB<=max(input$limites) & DATE_FIN>=min(input$limites) & #temps
-                                        V_URB %in% c(input$choix_fonctions[1:6])) #fonction urbaine
-    updateTextInput(session, "test", value = length(OH_ponctuels_subset$tab)) #besoin même si pas affiché pour calculs des OH sur les trois geom en même temps
-    OH_pg_subset$tab <- subset(OH_geom_pg_4326, DATE_DEB<=max(input$limites) & DATE_FIN>=min(input$limites) & #temps
-                                 V_URB %in% c(input$choix_fonctions[1:6])) #fonction urbaine
-    OH_pl_subset$tab <- subset(OH_geom_pl_4326, DATE_DEB<=max(input$limites) & DATE_FIN>=min(input$limites) & #temps
-                                 V_URB %in% c(input$choix_fonctions[1:6])) #fonction urbaine
-    OH_pt_subset$tab <- subset(OH_geom_pt_4326, DATE_DEB<=max(input$limites) & DATE_FIN>=min(input$limites) & #temps
-                                 V_URB %in% c(input$choix_fonctions[1:6])) #fonction urbaine
-
+    OH_ponctuels_subset$tab <- OH_ponctuels_4326[OH_ponctuels_4326@data$DATE_DEB<=max(input$limites) 
+                                                 & OH_ponctuels_4326@data$DATE_FIN>=min(input$limites) 
+                                                 & OH_ponctuels_4326@data$V_URB %in% c(input$choix_fonctions[1:6]),]
+    OH_pg_subset$tab <- OH_geom_pg_4326[OH_geom_pg_4326@data$DATE_DEB<=max(input$limites)
+                                                 & OH_geom_pg_4326@data$DATE_FIN>=min(input$limites)
+                                                 & OH_geom_pg_4326@data$V_URB %in% c(input$choix_fonctions[1:6]),]
+    OH_pl_subset$tab <- OH_geom_pl_4326[OH_geom_pl_4326@data$DATE_DEB<=max(input$limites)
+                                                 & OH_geom_pl_4326@data$DATE_FIN>=min(input$limites)
+                                                 & OH_geom_pl_4326@data$V_URB %in% c(input$choix_fonctions[1:6]),]
+    OH_pt_subset$tab <- OH_geom_pt_4326[OH_geom_pt_4326@data$DATE_DEB<=max(input$limites)
+                                                 & OH_geom_pt_4326@data$DATE_FIN>=min(input$limites)
+                                                 & OH_geom_pt_4326@data$V_URB %in% c(input$choix_fonctions[1:6]),]
+    
   })
 
   #5. INPUT > OUTPUT
@@ -236,47 +240,7 @@ shinyServer(function(input, output, session) {
     #possible d'ajouter un ID pour suppprimer + spécifiquement cette légende
   })
 
-  #GRAPHS OUTPUT
-  # Graphe de répartition des objets dans le temps entre date min et date max
-  # Avec surlignage de la sélection temporelle
-  # vals <- reactiveValues(pdata=ggplot())
-  # #creation du graphe
-  # observe({
-  #   date_min <- min(input$limites)
-  #   date_max <- max(input$limites)
-  #   echelle <- input$plot_echelle_y
-  #
-  #   subset_m_fonction_an <- subset(m_fonction_an, m_fonction_an$annee<=date_max & m_fonction_an$annee>=date_min)
-  #
-  #   # output$ohfreq <- renderPlot({
-  #   p <- ggplot()+
-  #     geom_bar(data = m_fonction_an,
-  #              aes(x=annee, y=value),
-  #              stat="identity",
-  #              width=1,
-  #              fill="#CDD2D4") +
-  #     geom_bar(data = subset_m_fonction_an,
-  #              aes(x=annee, y=value, fill=variable),
-  #              stat = "identity",
-  #              width=1)+
-  #     scale_fill_manual(values=adjustcolor(palette, alpha.f=0.8))+
-  #     ggtitle("Nombre d'OH par année et par valeur urbaine")+
-  #     xlab("année")+
-  #     ylab("Nombre d'OH")+
-  #     theme_hc()+
-  #     theme_facettes_clair()+
-  #     facet_wrap(~ v_urb, scales=echelle, nrow=2)
-  #
-  #   vals$data <- p
-  #   #     },
-  #   #     bg="transparent")
-  # })
-
-  #affichage
-  # observeEvent(vals$data,{
-  #   output$ohfreq <- renderPlot({isolate(vals$data)}, bg="transparent")
-  # })#tout aussi long
-  #
+  
   #6. INTERACTIONS AUTRES
 
   # mise en valeur de l'OH sélectionnée >> à gérer par rapport à la géométrie : zoom sur bounding box de la geom / mise en valeur des points et geom

@@ -24,8 +24,6 @@ library(RSQLite)
 library(rgdal)
 library(rgeos)
 
-#Import données
-source("charge_data.R", local=TRUE)
 
 #---- PALETTES ----
 #VURB
@@ -110,38 +108,8 @@ theme_facettes_clair <- function(){
 }
 
 
-#---- preparation du tableau pour barplot -----------
+#---- éléments HTML ---------
 
-## préparation des tableaux de contingence
-#passage en valeurs urbaines
-OH_ponctuels_4326@data$V_URB = as.factor(OH_ponctuels_4326@data$V_URB)
-# structure du tableau
-nb_fonction_an <- as.data.frame(matrix(nrow=max(OH_ponctuels_4326@data$DATE_FIN)+1,ncol=6))
-colnames(nb_fonction_an) <-c(1:6)
-# rownames(nb_fonction_an) <- as.numeric(rownames(nb_fonction_an))-1
-nb_fonction_an$annee <- as.numeric(rownames(nb_fonction_an))-1
-#remplissage du tableau
-for (n in 1:6){ # pour toutes les colonnes valeurs urbaines existantes
-  for (i in 0:max(nb_fonction_an$annee)) { #pour toutes les lignes(2016)
-    nb_fonction_an[i+1,n] <- sum (OH_ponctuels_4326@data$V_URB==n & OH_ponctuels_4326@data$DATE_DEB<=i & OH_ponctuels_4326@data$DATE_FIN>=i)
-  } # remplir cette colonne de la somme des individus ayant cette valeur urbaine et ayant existé dans les bornes données
-}
-
-m_fonction_an <- melt(nb_fonction_an, id.vars="annee")
-m_fonction_an$v_urb <- as.numeric(m_fonction_an$variable)
-m_fonction_an$v_urb <- cut (m_fonction_an$v_urb,
-                            breaks=c(1,2,3,4,5,6,7),
-                            labels=c("voirie, aménagement",
-                                     "structures défensives et militaires",
-                                     "constructions civiles",
-                                     "édifices relifieux",
-                                     "lieux d'inhumation",
-                                     "lieux de commerce, artisanat, production"),
-                            right=FALSE,
-                            include.lowest = TRUE)
-
-
-#HTMLS
 source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p>L\'application explOH permet d\'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contextes, les "ensembles urbains" et les "traits de rives", provenant <a href="http://citeres.univ-tours.fr/spip.php?article504", target="_blank">SIG Topographie de Tours PréIndustrielle<a/>, développée au <a href="http://citeres.univ-tours.fr/spip.php?rubrique57", target="_blank">Laboratoire d\'Archéologie Urbaine</a> à Tours (UMR 7324 CITERES).</br> </br>
 L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse. Elle a pour objectif d\'accompagner la lecture des analyses statistiques et spatiales développées au cours de ce travail en permettant au lecteur/utilisateur de naviguer par lui-même dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique.')
 

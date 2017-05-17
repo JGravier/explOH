@@ -180,18 +180,3 @@ OH_geom_pt_4326@data$DATE_DEB[OH_geom_pt_4326@data$DATE_DEB < -25] <- -25
 OH_geom_pg_4326@data$DATE_DEB[OH_geom_pg_4326@data$DATE_DEB < -25] <- -25
 OH_geom_pl_4326@data$DATE_DEB[OH_geom_pl_4326@data$DATE_DEB < -25] <- -25
 OH_ponctuels_4326@data$DATE_DEB[OH_ponctuels_4326@data$DATE_DEB < -25] <- -25
-
-
-# 
-# #enregistrement en shapefile pour accélerer les test
-# writeOGR(obj=OH_geom_pg, dsn="./data/OH_geom", layer="OH_geom_pg", driver='ESRI Shapefile', overwrite_layer=TRUE)
-# writeOGR(obj=OH_geom_pt, dsn="./data/OH_geom", layer="OH_geom_pt", driver='ESRI Shapefile')
-# writeOGR(obj=OH_geom_pl, dsn="./data/OH_geom", layer="OH_geom_pl", driver='ESRI Shapefile')
-# 
-# 
-# #FONDS DE CARTE
-# hydro_20 <- readOGR(dsn="./data", layer="hydro_20_cm", stringsAsFactors = FALSE)
-# P20_bati <- readOGR(dsn="./data", layer="P20_bati_cm", stringsAsFactors = FALSE)
-# P20_parcelles <- readOGR(dsn="./data", layer="P20_parcelles_cm", stringsAsFactors = FALSE)
-# pg_RGF932 <- readOGR(dsn="./data", layer="cad_RGF93", stringsAsFactors = FALSE)
-# P19_ilots <- readOGR(dsn="./data", layer="P19_cad_ilots", stringsAsFactors = FALSE)
