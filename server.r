@@ -35,24 +35,24 @@ shinyServer(function(input, output, session) {
                   stroke = TRUE,
                   weight=1,
                   opacity=0.7,
-                  color=~palette_fonctions(OH_geom_pg_4326@data$V_URB),
+                  color=~palette_fonctions(OH_geom_pg_4326@data$V_URB_NOM),
                   group="géometries",
                   popup=popup_pg_tout) %>%
       addCircles(data=OH_geom_pt_4326,
                  radius=10,
-                 color=~palette_fonctions(OH_geom_pt_4326@data$V_URB),
+                 color=~palette_fonctions(OH_geom_pt_4326@data$V_URB_NOM),
                  stroke = FALSE,
                  fillOpacity = 0.7,
                  group="géometries",
                  popup=popup_pt_tout) %>%
       addPolylines(data=OH_geom_pl_4326,
                    weight=1,
-                   color=~palette_fonctions(OH_geom_pl_4326@data$V_URB),
+                   color=~palette_fonctions(OH_geom_pl_4326@data$V_URB_NOM),
                    opacity= 0.7,
                    group="géometries",
                    popup = popup_pl_tout) %>%
 
-      addLegend(position="bottomlef", title = "Valeurs urbaines des OH", pal = palette_fonctions, values = OH_ponctuels_4326@data$V_URB, opacity = 1) %>%
+      addLegend(position="bottomlef", title = "Valeurs urbaines des OH", pal = palette_fonctions, values = OH_ponctuels_4326@data$V_URB_NOM, opacity = 1) %>%
 
       addPolygons(data=ens_urb,
                   group="ensembles urbains",
@@ -151,12 +151,12 @@ shinyServer(function(input, output, session) {
     if (input$couleur_OH == "v_urb") # afficher selon valeurs urbaines
     {
       # legende$couleurs_ponctuels <- ~palette_fonctions(OH_ponctuels_subset$tab@data$V_URB)
-      legende$couleurs_pt <- ~palette_fonctions(OH_pt_subset$tab@data$V_URB)
-      legende$couleurs_pg <- ~palette_fonctions(OH_pg_subset$tab@data$V_URB)
-      legende$couleurs_pl <- ~palette_fonctions(OH_pl_subset$tab@data$V_URB)
+      legende$couleurs_pt <- ~palette_fonctions(OH_pt_subset$tab@data$V_URB_NOM)
+      legende$couleurs_pg <- ~palette_fonctions(OH_pg_subset$tab@data$V_URB_NOM)
+      legende$couleurs_pl <- ~palette_fonctions(OH_pl_subset$tab@data$V_URB_NOM)
       legende$alpha_polygones <- 0.7
       legende$pal_legend <- palette_fonctions
-      legende$val_legend <- OH_ponctuels_subset$tab@data$V_URB
+      legende$val_legend <- OH_ponctuels_subset$tab@data$V_URB_NOM
       legende$title_legend <- "Valeurs urbaines des OH"}
 
     else if (input$couleur_OH == "portee") # afficher selon portée
