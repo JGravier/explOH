@@ -1,7 +1,7 @@
 ################################
 # Shiny app pour afficher les objets selon le temps
-# avril 2017
-# UI pour explOH_5
+# juin 2017
+# UI pour explOH_7
 ################################
 library(shiny)
 library(leaflet)
@@ -56,7 +56,7 @@ shinyUI(fluidPage(
            
            wellPanel(id="menu_OH",
                      h3("Identification des OH"),
-                     
+                     textInput("test", label="test", value = NULL),
                      #trouver OF
                      textInput("num_OH", label ="Trouver l'OH n°", value = NULL),
                      
