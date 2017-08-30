@@ -1,7 +1,7 @@
 /*couleurs generales*/
 body {
-    /* sombre : background-color: #242426; */
-	background-color: #CDD2D4;
+    /* sombre : background-color: #242426; gris 1 : CDD2D4; */
+	background-color: #D1D5D7;
     color : #F5F5F3;
     font-family: 'Roboto', sans-serif;
 }
@@ -88,14 +88,42 @@ margin-top:15px;
 
   
 /* panneaux shiny */ 
+
+
+
 .well {
    background-color: #AAB4B5;
-   border: 0px;
+   /*background-color: #7AACB1;*/
+   border: 0;
    border-radius: 10px
 }
 
+#temps_play.well{
+  padding:3px 19px 3px 19px;
+}
+
+#temps_play {
+  text-align: center;
+}
+
+#explorer{
+  font-weight : 700;
+  font-size : 16pt;
+  border-radius: 6px;
+  padding: 0 10px 0 10px;
+  border : 2px solid;  
+  display: inline-block;
+  cursor: pointer;
+}
+
+#explorer:hover{
+  background-color: #428bca;
+}
+
 .menu_gauche{
-	min-width:200px;
+  display: none;
+  top:100%;
+  min-width:200px;
 }
 
 /*elements divers */
@@ -131,23 +159,25 @@ margin-top:15px;
 
 /*couleurs et forme slider selection*/
 .irs-from, .irs-to, .irs-single{
-	background:#9aa5a7;
+  font-size: 12px;
+	/*background:#9aa5a7;*/
 }
 .irs-bar {
 border-top: 1px solid #9aa5a7;
 border-bottom: 1px solid #9aa5a7;
-background: #9aa5a7;
+/*background: #9aa5a7;*/
 }
 .irs-min, .irs-max {
 color: #FFFFFF;
+display: none;
 }
 .irs-slider {
     top: 17px;
-    width: 20px; height: 20px;
+    /*width: 20px; height: 20px;*/
     border: 1px solid #AAA;
     background: #DDD;
-    border-radius: 27px;
     -moz-border-radius: 27px;
+    border-radius: 27px;
     box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     cursor: pointer;
 }
@@ -167,6 +197,15 @@ color: #FFFFFF;
 
 .irs-grid-pol.small{
 	background-color : #F5F5F3
+  
+}
+
+/*slider bouton play/pause*/
+.glyphicon {
+top: 10px;
+background-color: white;
+padding: 3px;
+border-radius: 10px;
 }
 
 /* popups */
