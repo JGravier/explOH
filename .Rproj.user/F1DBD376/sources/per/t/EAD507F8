@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1504516081327.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3202262643",
+    "id" : "EAD507F8",
+    "lastKnownWriteTime" : 1511972294,
+    "last_content_update" : 1511972294395,
+    "path" : "C:/Users/lue/Sync/1recherche/1these/SIG/VISU/shiny/explOH/explOH/server.r",
+    "project_path" : "server.r",
+    "properties" : {
+        "cursorPosition" : "148,54",
+        "scrollLine" : "120"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
