@@ -120,16 +120,17 @@ theme_facettes_clair <- function(){
 #----------------------------------- éléments HTML ---------
 
 source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p>L\'application explOH permet d\'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contextes (les "ensembles urbains", les "traits de rives", les "pôles urbains") provenant du <a href="http://citeres.univ-tours.fr/spip.php?article504", target="_blank">SIG Topographie de Tours PréIndustrielle </a> (ToToPI), développé au <a href="http://citeres.univ-tours.fr/spip.php?rubrique57", target="_blank">Laboratoire d\'Archéologie Urbaine</a> à Tours (UMR 7324 CITERES).</br> </br>
-L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse. Elle a pour objectif d\'accompagner la lecture des analyses statistiques et spatiales développées au cours de ce travail en permettant au lecteur/utilisateur de naviguer par lui-même dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique.')
+                    L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse. Elle a pour objectif d\'accompagner la lecture des analyses statistiques et spatiales développées au cours de ce travail en permettant au lecteur/utilisateur de naviguer par lui-même dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique.</br></br>
+                    <p class="titre_info">Sources : </p>
+                    Données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS. </br>
+                    Fond de carte : OpenStreetMap, CartoDB')
 
 source.usage <-HTML('<p class="titre_info">Utilisation de l\'application :</p>Sur la <p class="stitre_info">carte</p>, <img src="icone_leaflet.png", alt="l\'icône en haut à droite"> permet de choisir différents fonds de carte et d\'afficher ou non les données OH et les données contextuelles. </br> </br>
-Le bouton <p id="explorer_info">explorer</p> permet d\'accéder à des outils de sélection des OH supplémentaires. </br> </br>
-Le panneau <p class="stitre_info">Années</p> permet choisir la période temporelle pour laquelles les OH sont afffichés, à partir du slider ou, pour un contrôle plus précis, en rentrant manuellement les dates minimum et maximum. Une seule année peut être sélectionnée en choisissant la même date pour les bornes  minimum et maximum. </br> </br>
-Le panneau <p class="stitre_info">Identification des OH</p>, qui apparaît après avoir cliqué sur le bouton "explorer", permet de retrouver un OH par son identifiant, de modifier l\'affichage des OH en fonction de leurs différents attributs, et d\'afficher seulement certains OH en fonction de leur attribut fonctionnel.')
+                    Le bouton <p id="explorer_info">explorer</p> permet d\'accéder à des outils de sélection des OH supplémentaires. </br> </br>
+                    Le panneau <p class="stitre_info">Années</p> permet choisir la période temporelle pour laquelles les OH sont afffichés, à partir du slider ou, pour un contrôle plus précis, en rentrant manuellement les dates minimum et maximum. Une seule année peut être sélectionnée en choisissant la même date pour les bornes  minimum et maximum. </br> </br>
+                    Le panneau <p class="stitre_info">Identification des OH</p>, qui apparaît après avoir cliqué sur le bouton "explorer", permet de retrouver un OH par son identifiant, de modifier l\'affichage des OH en fonction de leurs différents attributs, et d\'afficher seulement certains OH en fonction de leur attribut fonctionnel.')
 
 source.signature <- HTML(
   '<p class="signature">',
-  "Application développée par",
-  "<a href=\"http://www.parisgeo.cnrs.fr/spip.php?article6441\" target=\"_blank\">Lucie Nahassia</a>",
-  ", 2017"
+  "Application développée par Lucie Nahassia, 2017 | Données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS"
 )
