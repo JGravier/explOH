@@ -1,10 +1,4 @@
 /*couleurs generales*/
-body {
-    /* sombre : background-color: #242426; gris 1 : CDD2D4; */
-	background-color: #D1D5D7;
-    color : #F5F5F3;
-    font-family: 'Roboto', sans-serif;
-}
 
 a:link, a:visited {
     color:#428bca;
@@ -16,22 +10,26 @@ a:hover{
 	text-decoration:underline;
 }
 
-/*titres et signature*/
-h1{
-	font-family: 'Josefin Sans', 'Roboto', sans-serif;
-	font-size: 60pt;
-	font-weight: 700;
-	line-height: 0.5;
-	padding-top: 15px;
+.main-sidebar {
+    background-color: #5f6269;
 }
 
-h3{
-margin-top: 5px;}
+.skin-black .sidebar-menu > li.active > a, .skin-black .sidebar-menu > li:hover > a {
+    color: #fff;
+    background: #1e5686;
+    border-left-color: #fff;
+}
 
- h4{
-	 text-indent: 95px;
- }
- 
+/*titres et signature*/
+.titre_info {
+	font-size:15pt;
+	font-weight: 700
+}
+
+.stitre_info{
+	color:#428bca;
+	display:inline;
+}
  
 .signature{
 	font-size:10pt;
@@ -39,94 +37,12 @@ margin-top: 5px;}
 	padding-right:20px;
 	line-height: 3;
   }
-  
-  
-/* panneau information*/
- 
-#bouton_info{
-	  position : absolute;
-	  right:20px;
-	  top: 50px
-  }
-  
-#bouton_info:hover{
-	background-color:#428bca;
-}
 
-#bouton_fermer{
-position: absolute;
-right: 50%;
-margin-top:15px;
-}
-
-#bouton_fermer:hover{
-	background-color:#428bca;
-}
-
-#information_panel{
-	background-color: #F5F5F3;
-	color: #99a2a3;
-	padding: 30px;
-	display:none;
-	margin-bottom: 20px;
-	padding-bottom: 60px;
-	border-radius: 10px;
-}
-
-.titre_info {
-	font-size:20pt;
-	font-family:'Josefin Sans';
-	font-weight: 700
-}
-
-.stitre_info{
-	color:#434f51;
-	display:inline;
-}
-
-
-#explorer_info{
-  background-color:#428bca;
-  color: #F5F5F3;
-  display:inline;
-  border-radius: 5px;
-  padding: 2px 4px 3px 4px;
-}
-  
-/* panneaux shiny */ 
-
-.well {
-   background-color: #AAB4B5;
-   /*background-color: #7AACB1;#668F84*/
-   border: 0;
-   border-radius: 10px
-}
-
-#temps_play.well{
-  padding:3px 19px 3px 19px;
-}
 
 #temps_play {
   text-align: left;
 }
 
-#explorer{
-  /*font-weight : 700;*/
-  cursor: pointer;
-  font-size: 14pt;
-  text-align: center;
-  background-color:#428bca;
-}
-
-#explorer:hover{
-  /*font-weight : 700;*/
-  background-color:#AAB4B5;
-}
-.menu_gauche{
-  display: none;
-  top:100%;
-  min-width:220px;
-}
 
 /*elements divers */
 .legend {
@@ -135,29 +51,15 @@ margin-top:15px;
 }
 
 #map{
-   border-radius: 10px;
-}
-
-#ohfreq {
-   background-color: #AAB4B5;
-   border-radius: 10px
+   margin-bottom: 20px;
 }
 
 .control-label{
   font-weight : normal;
 }
 
-
-/*couleur boutons*/
-.btn-default {
-    color: #FFFFFF;
-    background-color: #9aa5a7;
-    border-color:#ccc;
-}
-.btn-default:hover{
-	color:#FFFFFF;
-	background-color:#428bca;
-	border-color:#ccc;
+.btn-default{
+	color:#428bca;
 }
 .btn-1{
   color:#e72535;
@@ -182,63 +84,15 @@ margin-top:15px;
   margin-top:-5px;
 }
 
-/*couleurs et forme slider selection*/
-.irs-from, .irs-to, .irs-single{
-  font-size: 12px;
-	/*background:#9aa5a7;*/
-}
-.irs-bar {
-border-top: 1px solid #9aa5a7;
-border-bottom: 1px solid #9aa5a7;
-/*background: #9aa5a7;*/
-}
-.irs-min, .irs-max {
-color: #FFFFFF;
-display: none;
-}
-.irs-slider {
-    top: 17px;
-    /*width: 20px; height: 20px;*/
-    border: 1px solid #AAA;
-    background: #DDD;
-    -moz-border-radius: 27px;
-    border-radius: 27px;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-    cursor: pointer;
-}
-#irs-active-slider, .irs-slider:hover {
-    background: #428bca;
-    /*border: 1px solid #428bca;*/
-}
-/* slider chiffres dessous*/
-.irs-grid-text{
-	color : #F5F5F3;
-	font-size: 11px;
 
-}
-.irs-grid-pol{
-	background-color : #F5F5F3
+/* couleurs tab AFC */
+.plot_AFC.box-body {
+	background-color:#dedede;
 }
 
-.irs-grid-pol.small{
-	background-color : #F5F5F3
-  
-}
-
-#titre_annees{
-  position: absolute;
-}
-
-/*slider bouton play/pause*/
-.glyphicon {
-top: 10px;
-background-color: white;
-padding: 3px;
-border-radius: 10px;
-}
-
-/* popups */
-.leaflet-popup-content-wrapper {
-  color : #111111;
+.tab_contrib_AFC{
+	background-color:#dedede;
+	border-left: 2px solid white;
+	border-right: 2px solid white;
 }
 

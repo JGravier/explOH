@@ -1,7 +1,7 @@
 ################################
 # Shiny app pour afficher les objets selon le temps 
-# novembre 2017
-# elements globaux pour explOH_10
+# mai 2018
+# elements globaux pour explOH_11
 ################################
 
 options(encoding = "UTF-8")
@@ -10,22 +10,36 @@ options(encoding = "UTF-8")
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
+library(shinydashboard)
+library(htmlwidgets)
 library(leaflet)
 library(RSQLite)
 library(dplyr)
+library(DT)
 library(reshape2)
 library(ggplot2)
 library(ggthemes)
 library(RColorBrewer)
 library(stringi)
+library(ade4)
+library(dichromat)
+library(ggrepel)
+library(grid)
+library(stringr)
+library(gridExtra)
+library(cowplot)
 
+#sources autres fichiers
+source("global_AFC.R")
+# source("6_themes_legendes_gobal.R")
 
 #Spatialobjects
 library(rgdal)
 library(sf)
 
-#Import données
+#Import données et mise en forme
 source("charge_data.R", local=FALSE)
+
 
 #----------------------------------- VARIABLES GLOBALES ----
 
@@ -45,6 +59,8 @@ palette_fonctions <- colorFactor(couleurs_vurb, levels(OH_geom$V_URB_NOM))
 ##PORTEE
 couleurs_portees <-c("#febd2b", "#fe892f", "#ff5733", "#ff2b37")
 palette_portees <- colorFactor(couleurs_portees, unique(OH_geom$PORTEE_NOM))
+
+
 
 #----------------------------------- FONCTIONS POPUP ----
 
@@ -90,31 +106,23 @@ polesIcons <- iconList(
 
 #----------------------------------- GGPLOT THEMES ----
 
-#theme ggplot facette clair
-theme_facettes_clair <- function(){
-  theme(legend.position="none",
-        
-        panel.grid.major.x = element_line(color = "#CDD2D4", linetype ="dotted", size = 0.5),
-        panel.grid.minor.x = element_line(color = "#CDD2D4", linetype ="dotted", size = 0.5),
-        panel.grid.major.y = element_line(color= "#CDD2D4", size= 0.5),
-        
-        axis.ticks =  element_line(color = "#CDD2D4"),
-        axis.text = element_text(colour = "#CDD2D4"),
-        axis.text.x = element_text(angle=90),
-        
-        text = element_text(colour = "#F5F5F3", face="bold"),
-        plot.title = element_text(size = rel(1.8), face = "bold", margin = margin(10,10,20,10), hjust = 0.5),
-        
-        strip.background = element_rect(fill="#CDD2D4"),
-        strip.text = element_text(colour = "#FFFFFF"),
-        
-        panel.background = element_rect(fill = "#F5F5F3",colour = NA),
-        plot.background = element_rect(fill = "transparent", colour = NA),
-        
-        # panel.spacing = margin(10), #ne marche pas avec les facettes
-        plot.margin = margin(20,20,10,20)
-  )
-}
+theme_ln <- function() 
+{theme(legend.position = "none",
+       legend.text = element_text(size=11),
+       legend.title = element_text(size=11),
+       panel.grid.major.x = element_line(linetype ="dotted", color ="grey75"),
+       panel.grid.minor.y = element_blank(), #ajouter les ticks secondaires
+       panel.background = element_rect(fill="white"),
+       plot.background = element_rect(fill="grey87"),
+       plot.title = element_text(size=13, face="bold"),
+       plot.subtitle = element_text(size=11, face="plain"),
+       plot.caption = element_text(size=10, color="white"),
+       plot.margin = unit(c(0.5,1,0.3,1), "lines"),
+       axis.ticks =  element_line(colour = "grey75"),
+       axis.title=element_text(size=11),
+       axis.text=element_text(size=10),
+       strip.background = element_rect(fill = "grey80"),
+       strip.text = element_text(size=11))}
 
 
 #----------------------------------- éléments HTML ---------
@@ -126,7 +134,6 @@ source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p
                     Fond de carte : OpenStreetMap, CartoDB')
 
 source.usage <-HTML('<p class="titre_info">Utilisation de l\'application :</p>Sur la <p class="stitre_info">carte</p>, <img src="icone_leaflet.png", alt="l\'icône en haut à droite"> permet de choisir différents fonds de carte et d\'afficher ou non les données OH et les données contextuelles. </br> </br>
-                    Le bouton <p id="explorer_info">explorer</p> permet d\'accéder à des outils de sélection des OH supplémentaires. </br> </br>
                     Le panneau <p class="stitre_info">Années</p> permet choisir la période temporelle pour laquelles les OH sont afffichés, à partir du slider ou, pour un contrôle plus précis, en rentrant manuellement les dates minimum et maximum. Une seule année peut être sélectionnée en choisissant la même date pour les bornes  minimum et maximum. </br> </br>
                     Le panneau <p class="stitre_info">Identification des OH</p>, qui apparaît après avoir cliqué sur le bouton "explorer", permet de retrouver un OH par son identifiant, de modifier l\'affichage des OH en fonction de leurs différents attributs, et d\'afficher seulement certains OH en fonction de leur attribut fonctionnel.')
 

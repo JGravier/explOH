@@ -1,7 +1,7 @@
 ################################
 # Shiny app pour afficher les objets selon le temps avec leaflet
-# novembre 2017
-# Server pour explOH_10
+# mai 2018
+# Server pour explOH_11
 ################################
 
 #####
@@ -9,20 +9,28 @@ library(shiny)
 
 shinyServer(function(input, output, session) {
   
+  
+  ###########################################################################
+  ##################### ONGLET 1 : exploration carte OH #####################
+  ###########################################################################
+  
   #nombre random pour frise début
   date_random <- sample (-25:2015, 2)
-
   
-  #----------------------------------- #1. carte de base ----
+  
+  #----------------------------------- #1.1. carte de base ----
   #ne rien mettre dedans qui change
   output$map <- renderLeaflet({
     
     leaflet() %>%
       setView(lat=47.394211, lng=0.687247, zoom = 15) %>%
       
-      ##tiles
+      ##tiless
       addProviderTiles("CartoDB.Positron", group="clair") %>%
       addProviderTiles("Esri.WorldImagery", group = "satellite") %>%
+      addTiles(options = tileOptions(opacity =0), attribution=" données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS", group=c("clair", "satellite")) %>% 
+      ##échelle
+      addScaleBar(position="bottomright", scaleBarOptions(imperial=FALSE)) %>% 
       
       ##layer control
       addLayersControl(
@@ -32,19 +40,34 @@ shinyServer(function(input, output, session) {
       hideGroup(c("traits de rive","ensembles urbains", "pôles urbains")) %>%    
       
       #légende
-      addLegend(position="bottomlef", 
+      addLegend(position="bottomleft", 
                 title = "Valeurs urbaines des OH", 
                 pal =  palette_fonctions, 
                 values = OH_geom$V_URB_NOM, 
-                opacity = 1)
-    })
+                opacity = 1) %>% 
+      
+      #bouton pour export
+      onRender(
+        "function(el, x) {
+            L.easyPrint({
+              title:'Enregistrer la carte',
+              sizeModes: ['Current', 'A4Landscape', 'A4Portrait'],
+              filename: 'export_carte',
+              exportOnly: true,
+              hideClasses: ['.leaflet-control-zoom','leaflet-control-layers'],
+              hideControlContainer:false,
+              customSpinnerClass:'epLoader',
+              tileWait:1000
+            }).addTo(this);
+            }"
+      )
+  })
   
   
-  #----------------------------------- #2. Declaration des reactive objects ----
-  
+  #----------------------------------- #1.2. Declaration des reactive objects ----
   #OH à supprimer, ajouter, et tableau en memoire (au début toutes dates toutes valeurs urbaines)
   OH_subset <- reactiveValues(
-    OH_A = NULL,
+    OH_A = OH_geom,
     OH_B = NULL,
     ID_del= NULL,
     ID_add = NULL,
@@ -64,8 +87,7 @@ shinyServer(function(input, output, session) {
     title_legend = NA)
   
   
-
-  #----------------------------------- #3. INPUT > INPUT : Mise à jour slider temps selon autres éléments (graphes et élements textes) ----
+  #----------------------------------- #1.3. INPUT > INPUT : Mise à jour slider temps selon autres éléments (graphes et élements textes) ----
   
   #date de départ pour lancer l'appli
   req(date_random)
@@ -81,7 +103,7 @@ shinyServer(function(input, output, session) {
                       value=c(input$borne_temps_1,input$borne_temps_2))
   })
   
-  #----------------------------------- #4. INPUT > DONNEES : sélection des subset en fonction des INPUTS ----
+  #----------------------------------- #1.4. INPUT > DONNEES : sélection des subset en fonction des INPUTS ----
   
   ##contextes (temps)
   observe({
@@ -123,12 +145,13 @@ shinyServer(function(input, output, session) {
     OH_subset$OH_A <- OH_subset$OH_B
     
     #message HTML nombre d'OH affichés
-    OH_subset$message <- paste(nrow(OH_subset$OH_B), " OH existants", sep="")
+    OH_subset$message <- paste(nrow(OH_subset$OH_B), " OH correspondants à la sélection", sep="")
     
   })
   
   
-  #----------------------------------- #5. INPUT > OUTPUT ----
+  
+  #----------------------------------- #1.5. INPUT > OUTPUT ----
   
   #CHANGEMENT COULEURS
   ## quand l'utilisateur choisi de modifier le type de legende
@@ -148,7 +171,7 @@ shinyServer(function(input, output, session) {
     legende$pal_legend <- palette_portees
     legende$val_legend <- as.factor(OH_geom$PORTEE_NOM)
     legende$title_legend <- "Niveau de portée des OH"}
-
+    
     #Subset en cours d'affichage (OH_A) à redessiner
     OH_subset$tab_add <- OH_subset$OH_A
     
@@ -168,7 +191,7 @@ shinyServer(function(input, output, session) {
     OH_pt <- rbind(OH_pt, null_row)
     OH_pg <- OH_add[st_geometry_type(OH_add)=="MULTIPOLYGON",] %>% st_cast("MULTIPOLYGON")
     OH_pl <- OH_add[st_geometry_type(OH_add)=="MULTILINESTRING",] %>% st_cast("MULTILINESTRING")
-  
+    
     #couleurs des OH 
     if (input$couleur_OH == "v_urb")
     { couleurs_pg<- ~legende$pal_couleurs(OH_pg$V_URB_NOM)
@@ -178,8 +201,8 @@ shinyServer(function(input, output, session) {
     {  couleurs_pg <- ~legende$pal_couleurs(OH_pg$PORTEE_NOM)
     couleurs_pl<- ~legende$pal_couleurs(OH_pl$PORTEE_NOM)
     couleurs_pt <- ~legende$pal_couleurs(OH_pt$PORTEE_NOM)}
-
-    ## POPUP
+    
+    #POPUP
     popup_ens_urb <- texte_popup_ens_urb(ens_urb_subset$tab)
     popup_traits_rive <- texte_popup_traits_rive(traits_rive_subset$tab)
     popup_poles <- texte_popup_poles(poles_subset$tab)
@@ -188,13 +211,17 @@ shinyServer(function(input, output, session) {
     popup_pt <-texte_popup_OH(OH_pt)
     # browser()
     
+    #date
+    subset_dates <-  paste("Période : ", min(input$limites)," - " ,max(input$limites), sep="")
+    
     # CARTE
     leafletProxy("map", data=OH_pt) %>%
       clearMarkers() %>%
       clearGroup(group=c("ensembles urbains", "traits de rive", "poles urbains")) %>%
-      removeControl(layerId="nombre") %>% 
+      removeControl(layerId = c("nombre","periode")) %>% 
       #nombre d'OH
       addControl(position="bottomleft", html=OH_subset$message, layerId = "nombre") %>% 
+      addControl(position="bottomleft", html=subset_dates, layerId = "periode") %>%
       #contexte
       addPolygons(data=ens_urb_subset$tab,
                   group="ensembles urbains",
@@ -223,7 +250,7 @@ shinyServer(function(input, output, session) {
                   group="géometries des OH",
                   layerId= as.character(OH_pg$OH_NUM),
                   popup=popup_pg ) %>%
-      addCircles(        radius=10,
+      addCircles(        radius=10, #data passée en argument du leaflet général pour contourner erreur
                          color=couleurs_pt,
                          stroke = FALSE,
                          fillOpacity = 0.7,
@@ -246,7 +273,46 @@ shinyServer(function(input, output, session) {
   })
   
   
-  #----------------------------------- #6. INTERACTIONS AUTRES ----
+  #TAB OUTPUT
+  observe({
+    tabOH <- OH_subset$OH_A %>% as.data.frame %>% select(-geom_wkt, -geometry, -QGIS_ID, -V_URB, - V_URB_NOM, -PORTEE_NOM )
+    output$tab_OH <-renderDataTable(
+      tabOH,
+      options=list(pageLength=10,
+                   info=TRUE,
+                   scrollX=TRUE
+      )
+    )
+    
+  })
+  
+  
+  #tTELECHARGEMENT SUBSET
+  
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      if (input$type_dl == "geojson"){return("selectionOH.geojson")}
+      else if(input$type_dl == "sqlite"){return("selectionOH.sqlite")}
+      else if(input$type_dl == "csv"){return("selectionOH.csv")}
+      else if(input$type_dl == "shapefile"){return("selectionOH.shp")}
+    },
+    content = function(file) {
+      dlOH <- st_transform(OH_subset$OH_A, proj_2154) %>% select(-geom_wkt)
+      if(input$type_dl == "csv"){st_write(obj=dlOH, dsn=file, layer_options = "GEOMETRY=AS_WKT")}
+      else if(input$type_dl == "geojson"){st_write(obj=dlOH, dsn=file, layer="OH")}
+      else if(input$type_dl == "sqlite"){st_write(obj=dlOH, dsn=file, layer="OH", dataset_options="SPATIALITE=YES", layer_options="FORMAT=SPATIALITE")}
+    }
+  )
+  
+  # output$downloadMap <- downloadHandler(
+  #   filename = "carte.png",
+  #   content=function(file){
+  #     mapshot(x=output$map, file=file, remove_controls =c("zoomControl", "layersControl"))
+  #     
+  #   })
+  
+  
+  #----------------------------------- #1.6. INTERACTIONS AUTRES ----
   
   # mise en valeur de l'OH sélectionnée, même si elle est hors de ce qui est affiché
   observeEvent(input$selec_OH_search, {
@@ -335,6 +401,185 @@ shinyServer(function(input, output, session) {
         clearGroup("selection")
     })
   
-})
+  
+  
+  ###########################################################################
+  ##################### ONGLET 2 : AFC ##############################
+  ###########################################################################
+  
+  #----------------------------------- #2.1.déclaration reactive objects----
+  tab_contingence <- reactiveValues(tab=NULL)
+  reacAFC <- reactiveValues(data=NULL, #resultat du dudi.coa
+                            periodes = NULL, #découpage par période
+                            variable = NULL #variable fonctionnelle utilisée
+                            )
+  #----------------------------------- #2.2.INPUT > DONNEES : mise à jour du tableau de contingence----
+  observe({
+    nom <- paste("tab",input$select_var,input$select_periodes, sep="_")
+    tab_contingence$tab <- get(nom)
+  })
+  
+  #----------------------------------- #2.3.INPUT > OUTPUT ----
+  
+  # AFFICHAGE DU TABLEAU
+  observe({
+    output$tab_contingence <-renderDataTable(
+      tab_contingence$tab,
+      options=list(pageLength = 10, scrollX=TRUE, searching=FALSE)
+    )
+  })
+  
+  # CALCUL DE L'AFC
+  observeEvent(input$action_AFC, {
+    
+    AFC <-dudi.coa(tab_contingence$tab, scannf=FALSE, nf=6)
+    
+    reacAFC$data <- AFC
+    reacAFC$periodes <- input$select_periodes
+    reacAFC$variable <- input$select_var
+    
+    inertie_AFC <- summary.variance.dudi(AFC)
+    
+    #plot variance axes
+    output$plot_inertie_axes <- renderPlot(
+      barplot.dudi.variance(data=AFC, 
+                            sumdata=inertie_AFC,
+                            titre=NULL)
+    )    
+    
+    #update de l'UI pour choix des axes à ploter
+    updatePickerInput(session,"axe1",
+                      choices = seq(1,AFC$nf,1),
+                      selected="1")
+    updatePickerInput(session,"axe2",
+                      choices = seq(1,AFC$nf,1),
+                      selected="2")
+  })
+  
+  #PLOT AFC
+  observe({
+    
+    req(input$axe1, input$axe2)
+    AFC <- reacAFC$data
+    
+    #PREPARATION PLOT
+    #Choix palettes et liste_variable selon variables
+    if (reacAFC$variable=="urb"){
+      palette <- adjustcolor(couleurs_vurb, alpha=0.7)
+      liste_var <- sort(unique(OH_geom$V_URB))
+      }
+    else if (reacAFC$variable=="portee"){
+      palette <- adjustcolor(couleurs_portees, alpha=0.7)
+      liste_var <- sort(unique(OH_geom$PORTEE))
+      }
+    else if (reacAFC$variable=="usage"){
+      usages <- as.numeric(str_sub(rownames(AFC$co), start=-2))
+      palette <- cut (usages,
+                              breaks=c(10,20,30,40,50,60,70),
+                              labels=c("#e72535", "#0a8eb1", "#f6b01a", "#2fc6a0", "#703ab9","#ff7919"),
+                              right=FALSE,
+                              include.lowest = TRUE)
+      names(palette) <- usages
+      liste_var <- sort(unique(OH_geom$V_USAGE))
+      }
+
+      
+    axe1 <- as.numeric(input$axe1)
+    axe2 <- as.numeric(input$axe2)
+    
+    #BIPLOT 
+    pctvar_A1 <- round(AFC$eig[axe1]*100/sum(AFC$eig))
+    pctvar_A2 <- round(AFC$eig[axe2]*100/sum(AFC$eig))
+    lab_periode <- AFC$li
+    
+    
+    biplot <- 
+      
+      ggplot()+
+      geom_hline(aes(yintercept=0), colour="gray25")+
+      geom_vline(aes(xintercept=0), colour="gray25")+
+      labs(title="titre",
+           subtitle="soustitre",
+           x=paste("Composante n°", axe1, " (",pctvar_A1, "% de variance expliquée)", sep=""),
+           y=paste("Composante n°", axe2," (",pctvar_A2, "% de variance expliquée)", sep=""),
+           caption="L. Nahassia, Géographie-cité, 2018 | Sources : ToToPI, LAT, CITERES"
+      )+
+      # élargissement des limites du plot
+      expand_limits(x=c(min(AFC$li[,axe1])-0.1, max(AFC$li[,axe1])+0.1), y=c(min(AFC$li[,axe2])-0.1, max(AFC$li[,axe2])))+
+      # points des variables
+      geom_point(data=AFC$co,
+                 mapping=aes(x=AFC$co[,axe1], y=AFC$co[,axe2]), #choix des composantes i et j
+                 shape=16,
+                 size=7,
+                 colour=palette)+
+      #labels variables
+      geom_text(data=AFC$co,
+                mapping=aes(x=AFC$co[,axe1], y=AFC$co[,axe2],label=liste_var),
+                colour="white",
+                fontface="bold")+
+      # lignes reliant les individus
+      geom_path(data=AFC$li, 
+                mapping=aes(x=AFC$li[,axe1], y=AFC$li[,axe2]),
+                linetype="dotted",
+                colour= "gray18")+ #bcp trop compliqué de faire une line avec gradient
+      #label des individus
+      geom_text_repel(data=lab_periode,
+                      mapping=aes(x=lab_periode[,axe1], y=lab_periode[,axe2],label=rownames(lab_periode)),
+                      force=0.1,
+                      # max.iter = 1000,
+                      box.padding = unit(0.4, "lines"), 
+                      size=3,
+                      colour=color_ramp_ind(nrow(lab_periode)),
+                      segment.color="grey60")+
+      #points des individsu
+      geom_point(data=AFC$li, 
+                 mapping=aes(x=AFC$li[,axe1], y=AFC$li[,axe2]),
+                 shape=18,
+                 size=4,
+                 colour= color_ramp_ind(nrow(AFC$li)))+
+      theme_fivethirtyeight()+
+      theme_ln()
+    
+  
+    
+    output$plot_biplot <- renderPlot(
+      biplot
+    )    
+    
+    # CONTRIBUTIONS
+    contrib_AFC <- inertia.dudi(AFC, row.inertia = TRUE, col.inertia = TRUE)
+    
+    output$contrib_periodes <-renderDataTable(
+      contrib_AFC$row.abs,
+      options=list(pageLength = 10, scrollX=TRUE, searching=FALSE)
+    )
+    
+    output$contrib_variables <-renderDataTable(
+      contrib_AFC$col.abs,
+      options=list(pageLength = 10, scrollX=TRUE, searching=FALSE)
+    )
+
+
+    # Entrée : data = resultat dudi.coa + sumdata = résultat summary.variance.dudi
+    # plot_AFC <- biplot.AFC(data=AFC,
+    #                        axe=list(input$axe1,input$axe2),
+    #                        variable_color=palette,
+    #                        liste_variable=liste_var,
+    #                        titre=paste("Coordonnées des variables sur les axes",input$axe1,"et",input$axe2,sep=" "),
+    #                        soustitre=paste(input$select_periodes,"x", input$select_var, sep=" ")
+    # )
+    # 
+    # ouput$plot_biplot <- renderPlot(
+    #   plot_AFC
+    # )
+    # 
+    
+    
+  }) # fin observe AFC
+  
+  
+  
+  
+}) # fin du serveur
 
 
