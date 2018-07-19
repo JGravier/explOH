@@ -20,6 +20,7 @@ a:hover{
     border-left-color: #fff;
 }
 
+
 /*titres et signature*/
 .titre_info {
 	font-size:15pt;
@@ -44,7 +45,7 @@ a:hover{
 }
 
 
-/*elements divers */
+/*elements tab exploration*/
 .legend {
  /* background-color: #111111;*/
    font-size: 8pt;
@@ -85,8 +86,24 @@ a:hover{
 }
 
 
-/* couleurs tab AFC */
-.plot_AFC.box-body {
+/* elements tab AFC */
+
+#afc {
+	background-color: #e6e9ed;
+}
+
+#cah {
+	background-color: #e6e9ed;
+}
+
+
+/* .box_interne .box {
+    border-bottom: 1px solid #d2d6de;
+    border-right: 1px solid #d2d6de;
+    border-left: 1px solid #d2d6de;
+}
+ */
+.plot_AFC {
 	background-color:#dedede;
 }
 

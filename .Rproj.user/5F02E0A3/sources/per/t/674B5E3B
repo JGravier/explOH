@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1531394055668.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "568991177",
+    "id" : "674B5E3B",
+    "lastKnownWriteTime" : 1530802102,
+    "last_content_update" : 1530802102,
+    "path" : "~/lucie/Sync/1recherche/1these/SIG/VISU/shiny/explOH_11b/global_AFC.R",
+    "project_path" : "global_AFC.R",
+    "properties" : {
+        "cursorPosition" : "26,35",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

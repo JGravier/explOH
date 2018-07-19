@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1531394059086.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3046393146",
+    "id" : "F55A6B95",
+    "lastKnownWriteTime" : 1531408151,
+    "last_content_update" : 1531408151005,
+    "path" : "~/lucie/Sync/1recherche/1these/SIG/VISU/shiny/explOH_11b/server.r",
+    "project_path" : "server.r",
+    "properties" : {
+        "cursorPosition" : "527,34",
+        "docOutlineVisible" : "1",
+        "scrollLine" : "513"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

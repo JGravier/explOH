@@ -1,0 +1,444 @@
+---
+title: 'AA2018 : analyser et regrouper des pÃƒÂ©riodes chronologiques'
+author: "Julie Gravier"
+date: "19 avril 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Réalisation :** R version 3.4.4 (2018-03-15) -- "Someone to Lean On". 
+Copyright (C) 2018 The R Foundation for Statistical Computing. 
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+
+
+
+## Objectifs  
+L’analyse de données archéologiques dans le temps peut se faire à de nombreuses échelles et sur des éléments très différents (éléments matériels, objets historiques, sites archéologiques, etc.). À partir d’un tableau de contingence – comprenant le comptage des éléments étudiés par période chronologique (ligne) et par variable (colonne) – plusieurs méthodes statistiques peuvent être appliquées pour qualifier les périodes chronologiques selon les variables prises en considération. Plutôt que de se focaliser sur une seule méthode, nous en aborderons plusieurs car elles sont complémentaires et peuvent former une chaîne de traitement permettant d’explorer le jeu de données initial.
+
+Cette chaîne de traitement comprend plusieurs étapes qui seront présentées lors de l’atelier :
+
+* *étape 1 :* définir les écarts à l’indépendance et visualiser les écarts au pourcentage moyen sous forme de heatmaps (graphiques où les valeurs sont représentées en gradients colorés)
+
+* *étape 2 :* analyse multidimensionnelle des données de manière interactive (AFC : analyse factorielle des correspondances)
+
+* *étape 3 :* regroupement des périodes chronologiques similaires (classification ascendante hiérarchique sur les coordonnées de l’AFC)
+
+* *étape 4 :* puis qualification et visualisation de ces nouvelles classes par rapport aux variables étudiées (moyenne des écarts par classe)
+
+
+
+
+## Traitements
+On lance préalablement les *packages* qui seront nécessaires à tous les traitements.
+```{r eval=T}
+library(tidyverse) # collection de packages, comprenant notamment dplyr, ggplot2. Il est très utilisé pour faciliter le développement de chaînes de traitements
+library(ade4) # pour de l'exploration multidimensionnelle de données
+library(shiny) # pour réaliser des applications interactives
+library(explor) # pour faire de l'exploration interactive de données multidimensionnelles
+library(gplots) # utilisé ici pour faire des heatmaps
+```
+
+
+
+### Import des données
+**La céramique des Halettes à Compiègne (Oise).** Le tableau est extrait (p. 44) de DESACHY B., 2004, « Le sériographe EPPM: un outil informatisé de sériation graphique pour tableaux de comptages », Rev. archéologique Picardie [en ligne], 3/4, pp. 39-56, URL : [http://www.persee.fr/web/revues/home/prescript/article/pica_0752-5656_2004_num_3_1_2396](http://www.persee.fr/web/revues/home/prescript/article/pica_0752-5656_2004_num_3_1_2396)
+
+L'intérêt de ce jeu de données est qu'il est lié à un article en open access sur la sériation par Bruno Desachy. On peut donc s'y reporter pour mieux comprendre la complémentarité des traitements proposés ici par rapport à de la sériation de type sériographe EPPM (écarts positifs au pourcentage moyen).
+
+
+```{r eval=T}
+# jeu de données de l'opération des Halettes
+Compiegne <- read.csv(url("https://raw.githubusercontent.com/JGravier/sitRada/master/AA2018/Compiegne.csv"),
+                      header = TRUE,
+                      sep = ";",
+                      stringsAsFactors = F)
+head(Compiegne)
+# lignes : périodes d’occupation de l'opération archéologique, construites selon les observations de terrain (5 périodes),
+# colonnes : types techniques de céramique (16 types)
+
+```
+
+```{r eval=T}
+row.names(Compiegne) <- Compiegne$Periode # on renomme les lignes avec la colonne Periode
+
+Compiegne <- Compiegne %>%
+  select(TypeA:TypeP) # on sélectionne uniquement les colonnes liées aux types de céramique
+
+head(Compiegne)
+```
+
+L'autre jeu de données est lié à mon travail de thèse sur la ville de Noyon sur 2 000 ans (Oise). L'intérêt est de voir que la chaîne de traitement peut être appliquée à une autre échelle et à un tableau de contingence construit différemment. Il est construit à partir d'objets historiques (ex : une église, une nécropole, une rue, etc.) qui sont catégorisés par fonction urbaine et qui ont tous une durée d'existence propre continue dans le temps (date de début et date de fin). Par requête, on peut alors construire un tableau de comptage des objets par pas de temps (en ligne) et par fonction (en colonne).
+
+Pour plus de précision, voir le jeu de donées et les métadonnées sur **[figshare](https://doi.org/10.6084/m9.figshare.5630326)** et l'article en open access : GRAVIER J., 2015, « Recognizing Temporalities in Urban Units from a Functional Approach: Three Case Studies », in GILIGNY F., DJINDJIAN F., COSTA L., MOSCATI P., ROBERT S. (éd.), CAA 2014, 21st Century Archaeology, Concepts, Methods and Tools. Proceedings of the 42nd Annual Conference on Computer Applications and Quantitative Methods in Archaeology [en ligne], Oxford : Archaeopress, pp. 371-380, URL : [http://hal.archives-ouvertes.fr/hal-01474197](http://hal.archives-ouvertes.fr/hal-01474197)
+
+```{r eval=T}
+# jeu de données des objets historiques de Noyon
+Noyon <- read.csv(url("https://raw.githubusercontent.com/JGravier/sitRada/master/AA2018/Noyon_2000_50ansEUDCDE.csv"),
+                      header = TRUE,
+                      sep = ";",
+                      stringsAsFactors = F)
+head(Noyon)
+# lignes : pas de temps chronologique arbitraire de 50 ans ([1;50], [51;100], [101;150]… depuis les origines de Noyon jusqu’au début du 21e s.),
+# colonnes : fonction urbaine définie selon l’adapatation du thésaurus du CNAU (voir métadonnées des données sur figshare)
+
+```
+
+```{r eval=T}
+# On renomme les lignes :
+Noyon <- Noyon %>%
+  unite(Dates, Debut, Fin, sep = "-", remove = FALSE) # on réunit les colonnes Début et Fin par un séparateur "-" ; on garde les colonnes initiales (remove = FALSE)
+rownames(Noyon) <- Noyon$Dates # noms des lignes selon notre nouvelle colonne appelée "Dates"
+
+head(Noyon)
+```
+
+
+
+### Import des fonctions
+On importe ensuite quelques fonctions qui ont été écrites spécifiquement pour ce script, en particulier pour simplifier le code et le rendre plus clair. *Attention* : ici, le chemin est le même que celui du projet R (dans le même dossier).
+
+``` {r eval=T}
+source("Fonctions_VisuClasses.R")
+```
+
+
+
+### Traitements pour les données de Compiègne
+
+
+
+#### étape 1
+On fait tout d'abord un test du khi-deux (hypothèse d'indépendance H0). Il est fréquent de faire le test en archéologie préalablement à l'étude des écarts à l'indépendance. Toutefois, l'utilité du test est largement discuté quand le tableau étudié n'est pas un échantillon.
+
+``` {r eval=T}
+Compiegne %>%
+  chisq.test()
+```
+
+On calcule ensuite les écarts au pourcentage moyen (*cf.* Desachy 2004)
+``` {r eval=T}
+Ecart_PM_Compiegne <- EPM(Compiegne) # on applique une des fonctions réalisées pour le script
+
+head(Ecart_PM_Compiegne)
+```
+
+Ce tableau se lit : "par rapport à ce qui serait attendu dans une situation aléatoire, le Type A de céramique a un écart positif de 20.53 % pour la période 5", ce qui revient à dire (de manière plus usuelle) que cet écart très positif correspond à un lien signifiant entre le type A de céramique et la période 5 de l'opération des Halettes.
+
+On peut ensuite visualiser les écarts au pourcentage moyen sous la forme de *heatmap*.
+
+``` {r eval=T}
+my_palette2 <- colorRampPalette(c("#5e3c99", "#f7f7f7", "#e66101"))(n = 50)  # création de sa propre palette de couleur
+
+Ecart_PM_CompiegneM <- as.matrix(Ecart_PM_Compiegne) # nécessaire d'avoir des données sous forme de matrice pour fonction heatmap.2
+heatmap.2(Ecart_PM_CompiegneM, Rowv = FALSE, Colv = FALSE, # on ne réordonne pas les lignes et les colonnes
+          col = my_palette2, # on utilise la palette de couleur que l'on a créé
+          denscol = "black",
+          dendrogram = 'none', # on ne veut ni de réordonnancement des lignes et des colonnes, ni de dendrogramme tracé
+          trace = 'none')
+```
+
+On visualise que la période 5 est très associée au type A, et inversement que ce type est très sous-représenté pour les périodes 1 et 2. Les cases qui tendent vers le blanc sont celles dont les valeurs du tableau des écarts au pourcentage moyen sont proches de 0 (*cf.* Color Key and Histogram). Ce sont les valeurs proches d'une situation aléatoire.
+Le type A est particulier. On peut donc tester la visualisation sans le type A pour mieux apprécier les différences entre les autres types de céramique.
+
+``` {r eval=T}
+Ecart_PM_Compiegne %>% # on reprend le tableau de données
+  select(-TypeA) %>% # on retire le type A
+  as.matrix() %>% # on transforme en matrice
+  heatmap.2(Rowv = FALSE, Colv = FALSE, # on applique le heatmap
+          col = my_palette2,
+          denscol = "black",
+          dendrogram = 'none',
+          trace = 'none')
+```
+
+**NB**: écrire *Ecart_PM_Compiegne %>% as.matrix()* revient au même que d'écrire *Ecart_PM_CompiegneM <- as.matrix(Ecart_PM_Compiegne)*. La première solution est toutefois plus pratique car elle évite de créer un nouvel objet dans notre environnement R, alors qu'on souhaite uniquement obtenir un graphique et non pas un nouveau tableau à exporter ou sur lequel on exécuterait de nouveaux traitements.
+
+
+
+#### étape 2
+L'objectif est d'étudier nos données de manière multi-dimensionnelle. Il y a plusieurs possibilités en matière de chaîne de traitement :
+
+1) on implémente "en dûr" l'AFC (analyse factorielle des correspondances)
+
+2) on considère que ce n'est qu'une étape d'exploration des données. On propose donc d'utiliser le package explor qui permet d'explorer interactivement le jeu de données.
+
+Utilisation d'explor :
+``` {r eval=T}
+# on crée un nouvel objet qui est l'AFC
+AFC_Compiegne <- dudi.coa(Compiegne, # fonction dudi.coa > AFC
+                 scannf = FALSE,
+                 nf = ncol(Compiegne)) # on garde tous les axes de l'AFC <=> au nombre de colonnes du tableau initial
+
+# explor(AFC_Compiegne)
+# lancer la commande ci-dessus normalement (ici ajout de la commande en mode commentaire car un document R Markdown statique ne gère par les applications Shiny interactives)
+
+```
+
+On observe un effet Guttman sur les périodes chronologiques, ce qui témoigne d'un effet de sériation.
+
+
+#### étape 3
+L'objectif est maintenant de regrouper les périodes chronologiques qui sont similaires. On va réaliser une CAH (classification ascendante hiérarchique) sur les coordonnées de l'AFC.
+En faisait une CAH sur les coordonnées on prend en considération tous les axes (et non pas seulement les deux premiers, ou l'axe 1 et 3 par exemple comme lorsqu'on explore les résultats de l'AFC). Cela revient à dire que l'on a considéré toute l'information contenue dans le tableau de données initial.
+
+``` {r eval=T}
+# on crée un nouvel objet qui est la CAH sur les coordonnées de l'AFC
+CAH_k2_Compiegne <- Compiegne %>%
+  CAH_DistKhi2() # une des fonctions réalisée pour ce script
+
+# visualisation sous forme d'arbre de la CAH
+plot(CAH_k2_Compiegne, hang = -1, cex = 0.6, 
+     main = "Dendrogramme - La fouille des Halettes de Compiègne",
+     xlab = "Périodes chronologiques")
+```
+
+Quelles sont les périodes qui se ressemblent le plus ? Quelles classes va-t-on sélectionner ? Pour y répondre, on va étudier de l'inertie de la CAH.
+
+``` {r eval=T}
+inertie_Compiegne_k <- sort(CAH_k2_Compiegne$height, decreasing = TRUE)
+inertie_Compiegne_k_part <- inertie_Compiegne_k/sum(inertie_Compiegne_k)*100
+barplot(inertie_Compiegne_k_part[1:4], col = "#454847", border = "#454847", names.arg = seq(1, 4, 1),
+        xlab = "Nombre de classes",
+        ylab = "Part de l'inertie totale (%)")
+# donc pour le présent cas, on peut découper en 2 classes l'arbre de la CAH
+
+# Visuellement, si l'on découpe en 2 classes, cela correpond à :
+plot(CAH_k2_Compiegne, hang = -1, cex = 0.6, 
+     main = "Dendrogramme - La fouille des Halettes de Compiègne",
+     xlab = "Périodes chronologiques",
+     ylab = "")
+rect.hclust(CAH_k2_Compiegne, 2, border = "firebrick")
+```
+
+Les périodes 1 et 2 se ressemblent beaucoup au regard des types de céramique mis au jour lors de l'opération des Halettes. De même, les périodes 3, 4 et 5 sont semblables. Toutefois, elles sont moins semblables entre elles que le sont les périodes 1 et 2 (distances plus faibles entre P1 et P2 qu'entre P3 et P4 par exemple).
+
+
+
+#### étape 4
+Au final, l'objectif est de présicer comment qualifier ces classes chronologiques selon la surreprésentation ou la sous-représentation des types techniques de céramiques.
+
+
+Deux procédures sont possibles :
+
+1) soit, on travaille directement sur le tableau des écarts à l'indépendance. Dans ce cas, on travaillera sur des écarts qui sont bruts ;
+
+2) soit, on travaille sur le tableau des écarts "standardisés". L'écart va alors mesurer "l'attraction" (écarts positifs) ou la "répulsion" (écarts négatifs) entre la période (i) et le type de céramique (j). 
+Sous l'hypothèse d'absence de relation entre individus et variables, ces écarts sont centrés (= 0). Attention toutefois, ces écarts dits standardisés (généralement appelés résidus standardisés), sont centrés mais non réduits (leur variance étant < à 1, contrairement à une véritable standardisation où les écarts-types sont = 1). Dès lors, on peut s'intéresser aux valeurs extrêmes mais on ne peut pas émettre de seuil de significativité.
+
+
+``` {r eval=T}
+# on découpe préalablement notre arbre de la CAH en deux classes
+Typochrono_Compiegne_k <- cutree(CAH_k2_Compiegne, k = 2)  # k = nombre de classes
+```
+
+
+* **Première possibilité : tableau des écarts à l'indépendance bruts**
+``` {r eval=T}
+Ecart_Compiegne <- Compiegne %>%
+  TabEcart() %>% # tableau d'indépendance (fonction réalisée pour le script)
+  mutate(Cluster = factor(Typochrono_Compiegne_k, levels = 1:2)) # ici, on crée une nouvelle colonne au tableau des écarts, appelée "Cluster", où chaque période appartient à une des classes de la CAH (par ex : les P1 et P2 appartiennent à la même classe numéro 2)
+
+head(Ecart_Compiegne)
+```
+
+``` {r eval=T}
+rownames(Ecart_Compiegne) <- c("P5", "P4", "P3", "P2", "P1") # on renomme les lignes
+write.csv(Ecart_Compiegne, "Ecart_Compiegne.csv") # on en fait une sortie sous forme de tableau
+```
+
+On va ensuite calculer les moyennes des écarts à l'indépendance par classe (Cluster)
+``` {r eval=T}
+Ecart_Compiegne <- Ecart_Compiegne %>%
+  group_by(Cluster) # on regroupe les périodes par classe
+Ecart_Compiegne <- Ecart_Compiegne %>%
+  summarise_all(funs(mean)) # on fait la moyenne par classe des écarts, et ce, pour tous les types de céramique
+write.csv(Ecart_Compiegne, "Compiegne_EcartInde_Moyenne_de_classe.csv") # on en fait une sortie
+```
+
+
+On peut enfin faire un graphique qui permet d'observer pour chaque classe la sur/sous-représentation des types de céramiques. On peut donc caractériser les classes de périodes qui se ressemblent.
+``` {r eval=T}
+Ecart_Compiegne %>%
+  gather(key = Type, value = "Data", TypeA:TypeP) %>% # on réagence le tableau pour faire la visualisation souhaitée
+  ggplot() + # on utilise ggplot2
+  geom_bar(aes(Type, Data, fill = Cluster), stat = "identity") + # on va faire un diagramme en barre pour chaque type en donnant une couleur différente pour chaque classe
+  labs(caption = "J. Gravier | UMR Géographie-cités 2017") +
+  ggtitle("Compiègne : les types techniques de céramiques de la fouille des Halettes") +
+  labs(subtitle = "Classe de périodes : CAH (distance chi-deux)") +
+  xlab("") +
+  ylab("Moyennes des écarts à l'indépendance par classe") +
+  facet_wrap(~ Cluster) + # on décompose le graphique en deux selon chaque classe
+  coord_flip() # on met les barres horizontalement pour mieux lire le graphique
+```
+
+Ici 1 correspond au premier cluster qui rassemble les périodes 3, 4 et 5 ; et 2 au cluster qui regroupe les périodes 1 et 2. On observe par exemple que la moyenne des écarts du type P est tellement faible (= 6 pour classe 1) qu'il est pas ou peu visible sur le graphique. Cela implique que ce type de céramique n'est pas du tout signifiant pour distinguer les classes de période les unes des autres. On observe par contre que le type A contribue beaucoup à la distinction : très important dans la classe 1 et très faible en classe 2.
+
+Le problème ici est que les moyennes des écarts à l'indépendance sont réalisées sur les écarts bruts. Or, les écarts bruts sont dépendants des effectifs initiaux du tableau (les sommes des lignes et les sommes des colonnes). De fait, la moyenne va surtout mettre en avant les différences quantitatives initiales entre les variables (ici la quantité de céramique en poids selon les types). On observe donc plus un effet d'ordre de grandeur des lignes et des colonnes que des sur/sous-représentations significatives. Il est donc plus judicieux de normaliser les écarts à l'indépendance, pour rendre comparables les variables.
+
+
+* **Deuxième possibilité : en normalisant les écarts à l'indépendance (dits écarts ou résidus standardisés)**
+``` {r eval=T}
+Ecart_Compiegne_Norm <- Compiegne %>%
+  TabEcartPearsonResidus() %>% # calculs des résidus de Pearson (fonction réalisée pour le script)
+  mutate(Cluster = factor(Typochrono_Compiegne_k, levels = 1:2)) # on crée une colonne Cluster où chaque période appartient à une des classes liées à la CAH
+
+head(Ecart_Compiegne_Norm)
+
+rownames(Ecart_Compiegne_Norm) <-  c("P5", "P4", "P3", "P2", "P1")
+write.csv(Ecart_Compiegne_Norm, "Ecart_Compiegne_Norm.csv")
+
+Ecart_Compiegne_Norm <- Ecart_Compiegne_Norm %>%
+  group_by(Cluster)
+Ecart_Compiegne_Norm <- Ecart_Compiegne_Norm %>%
+  summarise_all(funs(mean))
+write.csv(Ecart_Compiegne_Norm, "Noyon_EcartIndeNorm_moyenne_classe.csv")
+
+Ecart_Compiegne_Norm %>%
+  gather(key = Type, value = "Data", TypeA:TypeP) %>%
+  ggplot() +
+  geom_bar(aes(Type, Data, fill = Cluster), stat = "identity") +
+  labs(caption = "J. Gravier | UMR Géographie-cités 2017") +
+  ggtitle("Compiègne : les types techniques de céramiques de la fouille des Halettes") +
+  labs(subtitle = "Classe de périodes : CAH (distance chi-deux)") +
+  xlab("") +
+  ylab("Moyennes des écarts standardisés par classe (résidus de Pearson)") +
+  facet_wrap(~Cluster) +
+  coord_flip()
+```
+
+On peut également, si on le souhaite, réordonner les types selon les écarts.
+``` {r eval=T}
+Ecart_Compiegne_Norm %>%
+  gather(key = Type, value = "Data", TypeA:TypeP) %>%
+  ggplot() +
+  geom_bar(aes(reorder(Type, Data), Data, fill = Cluster), stat = "identity") + # réordonnancement des types selon les valeurs des écarts, appelé "Data"
+  labs(caption = "J. Gravier | UMR Géographie-cités 2017") +
+  ggtitle("Compiègne : les types techniques de céramiques de la fouille des Halettes") +
+  labs(subtitle = "Classe de périodes : CAH (distance chi-deux)") +
+  xlab("") +
+  ylab("Moyennes des écarts standardisés par classe (résidus de Pearson)") +
+  facet_wrap(~Cluster) +
+  coord_flip()
+```
+
+### Traitements pour les données de Noyon
+
+
+#### étape 1
+On sélectionne les fonctions urbaines du tableau initial. On retire les fonctions 7 (habitat privé) et 12 (occupation urbaine non caractérisée), car F7 n'est pas pertinente pour caractériser fonctionnellement l'espace urbain sur le temps long (qui dit ville, dit habitat...) et que F8 ne fera ressortir qu'un effet de sources (fonction utilisée pour définir des objets historiques dont la sémantique est vague - souvent des fouilles anciennes ou des fouilles dont les fenêtres sont petites - mais dont l'information est utile pour définir spatialement la taille/forme de l'espace urbain aux périodes anciennes).
+``` {r eval=T}
+Noyon_Fonctions <- Noyon %>%
+  select(F1:F11, -F7) # on sélectionne les colonnes F1 à F11 et l'on retire F7
+```
+
+Calcule et visualisation des écarts au pourcentage moyen
+``` {r eval=T}
+Ecart_PM_Noyon <- EPM(Noyon_Fonctions) # on applique une des fonctions réalisées pour le script
+
+# Visualisation des écarts au pourcentage moyen
+Ecart_PM_Noyon %>%
+  as.matrix() %>%
+  heatmap.2(Rowv = FALSE, Colv = FALSE,
+          col = my_palette2,
+          denscol = "black",
+          dendrogram = 'none',
+          trace = 'none')
+  
+```
+
+
+#### étape 2
+Utilisation d'explor pour réaliser l'AFC
+``` {r eval=T}
+# on crée un nouvel objet qui est l'AFC
+AFC_Noyon <- dudi.coa(Noyon_Fonctions, # fonction dudi.coa > AFC
+                 scannf = FALSE,
+                 nf = ncol(Noyon_Fonctions)) # on garde tous les axes de l'AFC <=> au nombre de colonnes du tableau initial
+
+# explor(AFC_Noyon)
+# lancer la commande ci-dessus normalement (ici ajout de la commande en mode commentaire car un document R Markdown statique ne gère par les applications Shiny interactives)
+
+```
+
+#### étape 3
+``` {r eval=T}
+# on crée un nouvel objet qui est la CAH sur les coordonnées de l'AFC
+CAH_k2_Noyon <- Noyon_Fonctions %>%
+  CAH_DistKhi2() # une des fonctions réalisée pour ce script
+
+# visualisation sous forme d'arbre de la CAH
+plot(CAH_k2_Noyon, hang = -1, cex = 0.6, 
+     main = "Dendrogramme - L'espace urbain de Noyon",
+     xlab = "Périodes chronologiques")
+```
+
+
+``` {r eval=T}
+inertie_Noyon_k <- sort(CAH_k2_Noyon$height, decreasing = TRUE)
+inertie_Noyon_k_part <- inertie_Noyon_k/sum(inertie_Noyon_k)*100
+barplot(inertie_Noyon_k_part[1:9], col = "#454847", border = "#454847", names.arg = seq(1, 9, 1),
+        xlab = "Nombre de classes",
+        ylab = "Part de l'inertie totale (%)")
+# donc pour le présent cas, on peut découper en 5 classes l'arbre de la CAH
+
+# Visuellement, si l'on découpe en 5 classes, cela correpond à :
+plot(CAH_k2_Noyon, hang = -1, cex = 0.6, 
+     main = "Dendrogramme - L'espace urbain de Noyon",
+     xlab = "Périodes chronologiques",
+     ylab = "")
+rect.hclust(CAH_k2_Noyon, 5, border = "firebrick")
+```
+
+
+#### étape 4
+Qualification des 5 classes selon les moyennes des écarts standardisés par classe.
+
+``` {r eval=T}
+# on découpe préalablement notre arbre de la CAH en cinq classes
+Typochrono_Noyon_k <- cutree(CAH_k2_Noyon, k = 5)  # k = nombre de classes
+```
+
+
+* **Deuxième possibilité : en normalisant les écarts à l'indépendance (dits écarts ou résidus standardisés)**
+``` {r eval=T}
+Ecart_Noyon_Norm <- Noyon_Fonctions %>%
+  TabEcartPearsonResidus() %>%
+  mutate(Cluster = factor(Typochrono_Noyon_k, levels = 1:5))
+
+head(Ecart_Noyon_Norm)
+
+write.csv(Ecart_Noyon_Norm, "Noyon_EcartIndeNorm.csv")
+
+Ecart_Noyon_Norm <- Ecart_Noyon_Norm %>%
+  group_by(Cluster)
+Ecart_Noyon_Norm <- Ecart_Noyon_Norm %>%
+  summarise_all(funs(mean))
+write.csv(Ecart_Noyon_Norm, "Noyon_EcartIndeNorm_meanCluster.csv")
+
+Ecart_Noyon_Norm$Cluster <- c("1-250", "251-650", "651-1150", "1151-1800", "1801-2016")
+Ecart_Noyon_Norm$Reorder <- c(1,2,3,4,5)
+
+Ecart_Noyon_Norm %>%
+  gather(key = Fonction, value = "Data", F1:F11) %>%
+  ggplot() +
+  geom_bar(aes(reorder(Fonction, Data), Data, fill = Cluster), stat = "identity") +
+  labs(caption = "J. Gravier | UMR Géographie-cités 2017") +
+  ggtitle("Noyon : Les fonctions urbaines (1er-21e s.)") +
+  labs(subtitle = "Classe de périodes : CAH (distance khi 2)") +
+  xlab("Fonctions urbaines") +
+  ylab("Moyennes des écarts standardisés par classe (résidus de Pearson)") +
+  facet_wrap(~reorder(Cluster, Reorder)) +
+  coord_flip()
+```
+
+
+
+
+
+
