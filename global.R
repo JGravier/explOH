@@ -41,8 +41,6 @@ library(rgdal)
 #sources autres fichiers
 source("global_AFC.R")
 source("charge_data.R", local=FALSE)
-source("A2r.R")
-
 
 
 #----------------------------------- VARIABLES GLOBALES ----
