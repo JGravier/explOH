@@ -21,8 +21,8 @@ shinyUI(
     dashboardSidebar(
       width=155,
       sidebarMenu(
-        menuItem("analyse factorielle", tabName="afc", icon=icon("sort-by-attributes-alt", lib = "glyphicon")),
         menuItem("exploration", tabName="explo_carte", icon = icon("search")),
+        menuItem("analyse factorielle", tabName="afc", icon=icon("sort-by-attributes-alt", lib = "glyphicon")),
         menuItem("informations", tabName ="info", icon=icon("info"))
       )
     ),
