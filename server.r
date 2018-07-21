@@ -461,7 +461,7 @@ shinyServer(function(input, output, session) {
     )
   })
   
-  #---- tableau variance des axes & choix des axes à ploter ----
+  #---- graphique, tableau variance des axes & choix des axes à ploter ----
   observe(priority = 9, {
     
     AFC <- reacAFC$data
@@ -472,7 +472,11 @@ shinyServer(function(input, output, session) {
       barplot.dudi.variance(data=AFC, 
                             sumdata=inertie_AFC,
                             titre=NULL))
+    output$tab_inertie_axes <- renderTable(inertie_AFC %>%  select(-CUTSCOLOR),  
+                                           striped=TRUE,
+                                           bordered=TRUE)
 
+    
     #update de l'UI pour choix des axes à ploter
     updatePickerInput(session,"axe1",
                       choices = seq(1,AFC$nf,1),

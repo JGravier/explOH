@@ -1,0 +1,16 @@
+ /* 
+  There is an issue where nested shinydashboard boxes are collapsed when some outside reactive value updates, and the nested box will not update accordingly.
+  This function monitors all the expanding event and force the inner box refresh by sending to the server an event.
+  */
+  jQuery(function($) {
+    // listening to box expanding events, [data-widget="collapse"] is the plus button(or minus when expanded)
+    $('.box').find('[data-widget="collapse"]').click(function(event) {
+      // find the enclosing collapsed box of the clicked button and then look for child #data-table-1 which has a data table widget
+      const myDataTable = $(this).closest(".collapsed-box").find("#data-table-1");
+      if(myDataTable.length > 0) { // if found, let the server know
+        setTimeout(function(){
+          Shiny.onInputChange("theBoxExpanded", Date.now());
+        }, 800); // 800ms to ensure the box is fully expanded
+      }
+    });
+  });
