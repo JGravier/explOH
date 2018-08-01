@@ -597,7 +597,7 @@ shinyServer(function(input, output, session) {
     #calcul CAH
     CAH <- hclust(
       reacAFC$dist_mat,
-      method= input$methode,
+      method= "ward.D2",
       members=apply(tab_contingence$tab, MARGIN=1, FUN=sum)
     )
     reacCAH$data <- CAH

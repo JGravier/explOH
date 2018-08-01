@@ -340,13 +340,8 @@ shinyUI(
                     status="danger",
                     solidHeader = TRUE,
                     collapsible = TRUE,
-                    tags$span("Les CAH sont calculées sur les coordonnées des périodes (lignes) sur toutes les axes de l'AFC, différenciées selon la distance du khi-2. Le poids des lignes est pondéré"),
-                    br(),br(),# ligne 4.1 choix de la méthode d'aggrégation
-                    awesomeRadio(inputId = "methode", 
-                                 label = "Choix de la méthode d'aggrégation ", 
-                                 choices = c("Ward"="ward.D2","baaezez"="ward.D2", "blabalba"="ward.D2", "eedqsfsf"="ward.D2"),
-                                 selected = "ward.D2", 
-                                 inline = TRUE, checkbox = TRUE, status="danger"),
+                    tags$span("Les CAH sont calculées sur les coordonnées des périodes (lignes) sur toutes les axes de l'AFC en distance euclidienne. Le critère d'aggrégation est fait selon la méthode de Ward qui maximise l'inertie interclasse pour chaque regroupement."),
+                    br(),br(),
                     box(# ligne 4.2 visualisation dendrogramme et inertie des découpages
                       id="choix_nb_classes",
                       width=12,
