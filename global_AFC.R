@@ -125,10 +125,11 @@ ggdendrogram2 <- function (data, segments = TRUE, labels = TRUE, leaf_labels = T
 
 # indep.classes.cah -----------------------------------------------------------------
 # Crée le tableau des écarts standardisés à l'indépendance de Pearson
+# pour les valeurs urbaines et les valeurs d'usage + transparence pour plot
 # Entrée : tab_cont= tableau initial, CAH = résultat CAH, nb = nombre de classes
 # Sortie : matrice
 
-indep.classes.cah <- function(tab_cont, CAH, nb){
+indep.classes.cah <- function(tab_cont_vurb, tab_cont_portee, CAH, nb){
 
     # Fonction pour abtenir les écarts standardisés
   TabEcartPearsonResidus <- function(x){
@@ -139,10 +140,18 @@ indep.classes.cah <- function(tab_cont, CAH, nb){
   }
   
   typochrono <- cutree(CAH, k=nb) 
-  ecarts_typo_norm <- tab_cont %>% TabEcartPearsonResidus() %>% mutate(Cluster = factor(typochrono, levels = 1:nb))
-  ecarts_typo_norm_class  <- ecarts_typo_norm %>% group_by(Cluster) %>% summarise_all(funs(mean))
+  #caracterisation par valeur d'usage
+  ecarts_vurb <- tab_cont_vurb %>% TabEcartPearsonResidus() %>%  mutate(Cluster = factor(typochrono, levels = 1:nb))
+  ecarts_norm_vurb  <- ecarts_vurb %>% group_by(Cluster) %>% summarise_all(funs(mean))
+  #caracterisation par portée
+  ecarts_portee <- tab_cont_portee %>% TabEcartPearsonResidus() %>%  mutate(Cluster = factor(typochrono, levels = 1:nb))
+  ecarts_norm_portee  <- ecarts_portee %>% group_by(Cluster) %>% summarise_all(funs(mean))
+  #les deux groupés en 1 tableau
+  tab_ecarts <- cbind(ecarts_norm_vurb,ecarts_norm_portee %>% select(-Cluster))
+
   
-  return(ecarts_typo_norm_class)
+  return(tab_ecarts)
+  
   
 }
 

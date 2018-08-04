@@ -713,26 +713,36 @@ shinyServer(function(input, output, session) {
         guides(colour=guide_legend(nrow=1))
     )
     
-    #choix tableau de contigence avec périodes mais comptage pour le moment vurbaine -> à faire au choix après ?
-    nom <- paste("tab_urb",input$select_periodes, sep="_")
-    tab_car <- get(nom)
+    #choix tableau de contigence avec périodes -> caractérisation en valeurs urbaines et portées
+    nom1 <- paste("tab_urb",input$select_periodes, sep="_")
+    tab_cont_vurb <- get(nom1)
+    nom2 <- paste("tab_portee",input$select_periodes, sep="_")
+    tab_cont_portee <- get(nom2)
     #tab indépendance mis en forme pour plot
-    tab_ind <- indep.classes.cah(tab_cont = tab_car, CAH = CAH, nb=nombre_classes) %>% gather(key=Fonction, value="data", v_urb.1 : v_urb.6)
+    #format long
+    tab_ind <- indep.classes.cah(tab_cont_vurb = tab_cont_vurb,
+                                 tab_cont_portee = tab_cont_portee,
+                                 CAH = CAH,
+                                 nb=nombre_classes) %>% gather(key=Fonction, value="data", v_urb.1 : portee.4)
+    #transparence
+    tab_ind$transparence <- 0
+    tab_ind[grepl("p",tab_ind$Fonction),]$transparence <- 1
     
     # graphiques des caractéristiques des classes
     output$plot_classes <- renderPlot(
       
-      ggplot(tab_ind) +
-        geom_bar(aes(x=Fonction, y=data, fill=Cluster), stat= "identity")+
+        ggplot(tab_ind) +
+        geom_bar(aes(x=Fonction, y=data, fill=Cluster, color=Cluster, alpha=transparence), stat= "identity")+
+        facet_wrap(~Cluster)+
         scale_fill_manual(values=palette_CAH(nombre_classes))+
-        facet_wrap(~Cluster, 
-                   scales="free_y")+
+        scale_color_manual(values=palette_CAH(nombre_classes))+
+        scale_alpha(range=c(1,0.4))+
         coord_flip()+
         labs(
-          y= "Moyenne des écarts standardisés par classe (résidus de Pearson)",
-          x="Valeurs urbaines",
+          x = "Moyenne des écarts standardisés par classe (résidus de Pearson)",
+          y="Valeurs urbaines",
           title= "Caractérisation des périodes urbaines par type de fonctions",
-          subtitle=paste("Classe : CAH (distance khi2) sur les périodes (lignes) de l'ACP ",stitre,sep=""),
+          subtitle="Classe de périodes: CAH (distance khi2)",
           caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
         theme_fivethirtyeight()+
         theme_ln()

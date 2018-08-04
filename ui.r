@@ -362,14 +362,14 @@ shinyUI(
                         column(#ligne 4.3.1 choix et frise
                           id="tab_periodes_classes",
                           width=2,
-                          pickerInput(
+                          numericInput(
                             inputId = "nombre_classes",
                             label="Nombre de classes à conserver :",
-                            choices = NULL,
-                            multiple=FALSE,
-                            width="auto",
-                            options=list(size=10)
-                          )
+                            value=4,
+                            min=1,
+                            max=10,
+                            step=1,
+                            width="auto")
                         ),
                         column(
                           id="graph_frise_classes",
