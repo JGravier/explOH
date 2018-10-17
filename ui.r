@@ -49,27 +49,27 @@ shinyUI(
         tabItem(tabName="explo_carte",
                 #------------------------------- 1. exploration ------------------
                 fluidRow(#---- ligne 1 : années ----
-                  #curseur années
-                  box ( 
-                    id="temps_play",
-                    width=9,
-                    height = 128,
-                    # slide temps
-                    sliderInput("limites", label="",
-                                min=-25, max=2015, value=c(-25, -25), round = 1, step=10, sep=" ",
-                                animate = animationOptions(interval=1500))
-                  ),#fin curseur années
-                  
-                  #bornes temporelles
-                  box (
-                    id="menu_temps",
-                    width=3,
-                    splitLayout(
-                      textInput("borne_temps_1", label ="année min", value = NULL),
-                      textInput("borne_temps_2", label="année max", value = NULL)
-                    ),
-                    actionButton("selec_bornes_temps", label="Appliquer les bornes")
-                  )#fin menu bornes temps
+                         #curseur années
+                         box ( 
+                           id="temps_play",
+                           width=9,
+                           height = 128,
+                           # slide temps
+                           sliderInput("limites", label="",
+                                       min=-25, max=2015, value=c(-25, -25), round = 1, step=10, sep=" ",
+                                       animate = animationOptions(interval=1500))
+                         ),#fin curseur années
+                         
+                         #bornes temporelles
+                         box (
+                           id="menu_temps",
+                           width=3,
+                           splitLayout(
+                             textInput("borne_temps_1", label ="année min", value = NULL),
+                             textInput("borne_temps_2", label="année max", value = NULL)
+                           ),
+                           actionButton("selec_bornes_temps", label="Appliquer les bornes")
+                         )#fin menu bornes temps
                 ),#fin fluidRow temps
                 
                 #---- ligne 2 : carte, affichage et identification OH ----
@@ -149,8 +149,8 @@ shinyUI(
                     selectInput("type_dl", label="", choices = c("geojson", "sqlite","csv")),
                     tags$span("identification"),
                     splitLayout(cellWidths = c("70%", "20%"),
-                      passwordInput("password_dl", label=NULL, value = NULL),
-                      actionButton("password_sub", "ok")
+                                passwordInput("password_dl", label=NULL, value = NULL),
+                                actionButton("password_sub", "ok")
                     ),
                     uiOutput("place_dl")
                   ),#fin téléchargement
@@ -392,36 +392,36 @@ shinyUI(
         
         tabItem(tabName="zones",
                 fluidRow( # ---- ligne 1 : description + choix OH ----
-                  box( #description
-                    id="info_zones",
-                    width=8,
-                    solidHeader = TRUE,
-                    div("Cet onglet permet d'explorer l'appartenance des OH à des types d'espaces (zone urbaines/intermédiare/non urbaine et zones de densités différentes). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2018."),
-                    br(),
-                    div("Les zones d'occupation et de densité peuvent être affichées dans l'onglet \"exploration globale\" en cliquant sur", img(src="icone_leaflet.png", alt="l'icône en haut à droite"), "sur la carte.")
-                  ),
-                  box( # choix OH
-                    width=4,
-                    title="choix des OH à tester",
-                    # fonctions pour afficher les types d'OH
-                    lapply(1:6, function(i) {
-                      pickerInput(
-                        inputId = paste("picker_zones", i, sep="_"),
-                        choices = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
-                        selected = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
-                        multiple = TRUE,
-                        options = list(
-                          `selected-text-format` = "count>-1",
-                          `count-selected-text` = paste(liste_vurb[i],"[{0}/{1}]", sep=" "),
-                          `actions-box` = TRUE,
-                          `deselect-all-text` = "Aucune",
-                          `select-all-text` = "Toutes",
-                          `live-Search` = TRUE,
-                          style = paste("btn-",i, sep="")
-                        )
-                      )
-                    } )#fin fonction
-                  )#fin box
+                          box( #description
+                            id="info_zones",
+                            width=8,
+                            solidHeader = TRUE,
+                            div("Cet onglet permet d'explorer l'appartenance des OH à des types d'espaces (zone urbaines/intermédiare/non urbaine et zones de densités différentes). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2018."),
+                            br(),
+                            div("Les zones d'occupation et de densité peuvent être affichées dans l'onglet \"exploration globale\" en cliquant sur", img(src="icone_leaflet.png", alt="l'icône en haut à droite"), "sur la carte.")
+                          ),
+                          box( # choix OH
+                            width=4,
+                            title="choix des OH à tester",
+                            # fonctions pour afficher les types d'OH
+                            lapply(1:6, function(i) {
+                              pickerInput(
+                                inputId = paste("picker_zones", i, sep="_"),
+                                choices = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
+                                selected = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
+                                multiple = TRUE,
+                                options = list(
+                                  `selected-text-format` = "count>-1",
+                                  `count-selected-text` = paste(liste_vurb[i],"[{0}/{1}]", sep=" "),
+                                  `actions-box` = TRUE,
+                                  `deselect-all-text` = "Aucune",
+                                  `select-all-text` = "Toutes",
+                                  `live-Search` = TRUE,
+                                  style = paste("btn-",i, sep="")
+                                )
+                              )
+                            } )#fin fonction
+                          )#fin box
                 ),
                 #---- ligne 3 : occupation ----
                 fluidRow( #ligne 3.1 schémas zones occupation
@@ -462,8 +462,18 @@ shinyUI(
                 )
                 
         ), #fin tabzone
+        #------------------------------- 4. ZONES ------------------
         
-        #------------------------------- 3. INFO ------------------
+        tabItem(tabName="poles",
+                fluidRow( # ---- ligne 1 : description ----
+                          box( #description
+                            id="info_poles",
+                            width=8,
+                            solidHeader = TRUE,
+                            HTML("Cet onglet permet d'explorer la distance des OH à des pôles urbains. <i> En cours de construction </i>.")
+                          ))
+        ),
+        #------------------------------- 5. INFO ------------------
         
         tabItem(tabName="info",
                 fluidRow( 
