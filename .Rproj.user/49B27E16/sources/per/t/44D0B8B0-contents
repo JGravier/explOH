@@ -1,7 +1,7 @@
 ################################
 # Shiny app pour afficher les objets selon le temps
-# L. Nahassia, mai 2018
-# UI pour explOH_11
+# L. Nahassia, aout 2018
+# UI 
 ################################
 library(shiny)
 library(leaflet)
@@ -19,19 +19,24 @@ shinyUI(
       titleWidth = 0),
     
     dashboardSidebar(
-      width=155,
+      width=160,
       sidebarMenu(
-        menuItem("exploration", tabName="explo_carte", icon = icon("search")),
-        menuItem("analyse factorielle", tabName="afc", icon=icon("sort-by-attributes-alt", lib = "glyphicon")),
+        menuItem("exploration globale", tabName="explo_carte", icon = icon("search")),
+        menuItem("analyse factorielle", tabName="afc", icon=icon("sort-amount-desc")),
+        menuItem("analyse par zone", tabName="zones", icon=icon("square-o")),
+        menuItem("distance aux pôles", tabName="poles", icon=icon("star")),
         menuItem("informations", tabName ="info", icon=icon("info"))
       )
     ),
     
     dashboardBody(
+      tags$script(HTML('
+                                            $(document).ready(function() {
+                       $("header").find("nav").append(\'<div class="div_titre"> <p class="titre">explOH</p> <p class="stitre">plateforme d\\\'exploration spatio-temporelle des Objets Historiques de la ville de Tours (base ToToPI)</p></div>\');
+                       }) 
+                       ')),
       
       tags$head(tags$link(rel="icon", type="image/png", href="favicon.png"),
-                tags$link(rel="stylesheet", type="text/css", href="https://fonts.googleapis.com/css?family=Roboto"),
-                tags$link(rel="stylesheet", type="text/css", href="https://fonts.googleapis.com/css?family=Josefin+Sans:400,600,700"),
                 tags$script(src ="https://rawgit.com/rowanwins/leaflet-easyPrint/gh-pages/dist/bundle.js"),
                 tags$title("explOH"),
                 includeCSS("www/style.css")
@@ -43,9 +48,9 @@ shinyUI(
       tabItems(
         tabItem(tabName="explo_carte",
                 #------------------------------- 1. exploration ------------------
-                fluidRow(
+                fluidRow(#---- ligne 1 : années ----
                   #curseur années
-                  box (
+                  box ( 
                     id="temps_play",
                     width=9,
                     height = 128,
@@ -54,7 +59,6 @@ shinyUI(
                                 min=-25, max=2015, value=c(-25, -25), round = 1, step=10, sep=" ",
                                 animate = animationOptions(interval=1500))
                   ),#fin curseur années
-                  
                   
                   #bornes temporelles
                   box (
@@ -68,8 +72,7 @@ shinyUI(
                   )#fin menu bornes temps
                 ),#fin fluidRow temps
                 
-                
-                #carte et affichage
+                #---- ligne 2 : carte, affichage et identification OH ----
                 fluidRow(
                   
                   #carte
@@ -79,16 +82,15 @@ shinyUI(
                     leafletOutput("map", height = "600px")
                   ),#fin carte
                   
-                  
                   #affichage
                   box(
                     id="affichage_OH",
                     width=3,
                     title="affichage des OH",
                     #selection valeurs d'usage
-                    tags$span("Affichage des différents types d'activités :"),
+                    tags$span("affichage des différents types d'activités :"),
                     br(),br(),
-                    # fonctions à afficher
+                    # fonctions pour afficher les types d'OH
                     lapply(1:6, function(i) {
                       pickerInput(
                         inputId = paste("picker_vurb", i, sep="_"),
@@ -100,8 +102,8 @@ shinyUI(
                           `selected-text-format` = "count>-1",
                           `count-selected-text` = paste(liste_vurb[i],"[{0}/{1}]", sep=" "),
                           `actions-box` = TRUE,
-                          `deselect-all-text` = "Aucune",
-                          `select-all-text` = "Toutes",
+                          `deselect-all-text` = "aucune",
+                          `select-all-text` = "toutes",
                           # `none-Selected-Text` =paste(liste_vurb[i],"(0/{1} activités)", sep=" "),
                           `live-Search` = TRUE,
                           style = paste("btn-",i, sep="")
@@ -112,13 +114,13 @@ shinyUI(
                     # couleurs selon fonction, portée ou durée d'existance
                     tags$span("différenciation des OH selon leur :"),
                     radioButtons("couleur_OH", label =NULL,
-                                 choices = list("activité" = "v_urb", 
+                                 choices = list("valeur urbaine" = "v_urb", 
                                                 "portée" = "portee",
-                                                "fiabilité de l'apparition"="fiab"), 
+                                                "fiabilité d'apparition"="fiab_a", 
+                                                "fiabilité de disparition"="fiab_d"), 
                                  selected = "v_urb",
-                                 inline = TRUE)
+                                 inline = FALSE)
                   ), #fin affichage
-                  
                   
                   #identification
                   box(
@@ -132,21 +134,25 @@ shinyUI(
                                 btnSearch = icon("search"),
                                 btnReset = icon("remove"))
                   )#fin identification
-                  
-                  
-                  
-                  
                 ), #fin fluidrow carte, affichage, identification
                 
-                
+                #---- ligne 3 : téléchargement, tableau OH ----
                 fluidRow(
                   #téléchargement
                   box( 
                     id="menu_dl",
                     width=2,
-                    title ="téléchargement des OH",
-                    downloadButton("downloadData", label="Télécharger les OH"),
-                    selectInput("type_dl", "Type de fichier:", choices = c("geojson", "sqlite","csv"))
+                    title ="téléchargement",
+                    HTML('<b>enregistrer la carte (raster) : </b> <img src="icone_dl.png", alt="deuxième bouton en haut à gauche"> sur la carte'),
+                    br(),br(),
+                    HTML('<b>télécharger les OH affichés (jeu de données) : </b>'),
+                    selectInput("type_dl", label="", choices = c("geojson", "sqlite","csv")),
+                    tags$span("identification"),
+                    splitLayout(cellWidths = c("70%", "20%"),
+                      passwordInput("password_dl", label=NULL, value = NULL),
+                      actionButton("password_sub", "ok")
+                    ),
+                    uiOutput("place_dl")
                   ),#fin téléchargement
                   
                   #tableau OH
@@ -161,9 +167,6 @@ shinyUI(
                 )
                 
         ),#fin exploration
-        
-        
-        # tags$div(source.signature)
         
         
         #------------------------------ 2. AFC ------------------------
@@ -245,9 +248,20 @@ shinyUI(
                         width=8,
                         title="inertie des axes de l'AFC",
                         collapsible = TRUE,
-                        plotOutput("plot_inertie_axes",
-                                   height = "200px")
-                      ),
+                        tabBox(
+                          id="tabbox_inertie",
+                          side="left",
+                          width=12,
+                          tabPanel(
+                            id="tab1",
+                            title="Histogramme",
+                            plotOutput("plot_inertie_axes",
+                                       height = "200px") %>% withSpinner(type=8, size=0.5)),
+                          tabPanel(
+                            id="tab2",
+                            title="Tableau",
+                            tableOutput("tab_inertie_axes"))
+                        )),
                       box(
                         id="choix_axes_biplot",
                         width=4,
@@ -277,7 +291,7 @@ shinyUI(
                           width=10,
                           class="plot_AFC",
                           scatterD3Output("plot_biplot",
-                                          height = "600px")
+                                          height = "600px") %>% withSpinner(type=8, size=0.5)
                         ),
                         column(
                           width=2,
@@ -329,22 +343,17 @@ shinyUI(
                     status="danger",
                     solidHeader = TRUE,
                     collapsible = TRUE,
-                    tags$span("Les CAH sont calculées sur les coordonnées des périodes (lignes) sur toutes les axes de l'AFC, différenciées selon la distance du khi-2. Le poids des lignes est pondéré"),
-                    br(),br(),# ligne 4.1 choix de la méthode d'aggrégation
-                    awesomeRadio(inputId = "methode", 
-                                 label = "Choix de la méthode d'aggrégation ", 
-                                 choices = c("Ward"="ward.D2","baaezez"="ward.D2", "blabalba"="ward.D2", "eedqsfsf"="ward.D2"),
-                                 selected = "ward.D2", 
-                                 inline = TRUE, checkbox = TRUE, status="danger"),
+                    tags$span("Les CAH sont calculées sur les coordonnées des périodes (lignes) sur toutes les axes de l'AFC en distance euclidienne. Le critère d'aggrégation est fait selon la méthode de Ward qui maximise l'inertie interclasse pour chaque regroupement."),
+                    br(),br(),
                     box(# ligne 4.2 visualisation dendrogramme et inertie des découpages
                       id="choix_nb_classes",
                       width=12,
                       title="Résultats de la CAH",
                       collapsible = TRUE,
-                      plotOutput("plot_dendro"),
+                      plotOutput("plot_dendro") %>% withSpinner(type=8, size=0.5),
                       br(),
                       plotOutput("plot_in_cah",
-                                 height = "200px")
+                                 height = "200px") %>% withSpinner(type=8, size=0.5)
                     ),#fin ligne 4.2
                     box(#ligne 4.3 caractérisation des classes
                       id="car_classes",
@@ -353,41 +362,116 @@ shinyUI(
                       footer="Chaque classe chronologique est caractérisée par son profil fonctionnel (par valeurs urbaines), en écarts à l'indépendance (/développer/).",
                       collapsible = TRUE,
                       fluidRow(
-                      column(#ligne 4.3.1 choix et frise
-                        id="tab_periodes_classes",
-                        width=2,
-                        pickerInput(
-                          inputId = "nombre_classes",
-                          label="Nombre de classes à conserver :",
-                          choices = NULL,
-                          multiple=FALSE,
-                          width="auto",
-                          options=list(size=10)
-                        )
-                      ),
-                      column(
-                        id="graph_frise_classes",
-                        width=10,
-                        plotOutput("frise_classes",
-                                   height = "110px")
-                      )),#fin ligne 4.3.1
+                        column(#ligne 4.3.1 choix et frise
+                          id="tab_periodes_classes",
+                          width=2,
+                          numericInput(
+                            inputId = "nombre_classes",
+                            label="nombre de classes à conserver :",
+                            value=4,
+                            min=1,
+                            max=10,
+                            step=1,
+                            width="auto")
+                        ),
+                        column(
+                          id="graph_frise_classes",
+                          width=10,
+                          plotOutput("frise_classes",
+                                     height = "110px")%>% withSpinner(type=8, size=0.5)
+                        )),#fin ligne 4.3.1
                       #ligne 4.3.2 plot des classes
-                      plotOutput("plot_classes")  
-                      )#fin ligne 4.3
+                      plotOutput("plot_classes")%>% withSpinner(type=8, size=0.5)  
+                    )#fin ligne 4.3
                     
                   ))#fin ligne 4 
                 
         ), #fin tabAFC
         
+        #------------------------------- 3. ZONES ------------------
+        
+        tabItem(tabName="zones",
+                fluidRow( # ---- ligne 1 : description + choix OH ----
+                  box( #description
+                    id="info_zones",
+                    width=8,
+                    solidHeader = TRUE,
+                    div("Cet onglet permet d'explorer l'appartenance des OH à des types d'espaces (zone urbaines/intermédiare/non urbaine et zones de densités différentes). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2018."),
+                    br(),
+                    div("Les zones d'occupation et de densité peuvent être affichées dans l'onglet \"exploration globale\" en cliquant sur", img(src="icone_leaflet.png", alt="l'icône en haut à droite"), "sur la carte.")
+                  ),
+                  box( # choix OH
+                    width=4,
+                    title="choix des OH à tester",
+                    # fonctions pour afficher les types d'OH
+                    lapply(1:6, function(i) {
+                      pickerInput(
+                        inputId = paste("picker_zones", i, sep="_"),
+                        choices = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
+                        selected = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
+                        multiple = TRUE,
+                        options = list(
+                          `selected-text-format` = "count>-1",
+                          `count-selected-text` = paste(liste_vurb[i],"[{0}/{1}]", sep=" "),
+                          `actions-box` = TRUE,
+                          `deselect-all-text` = "Aucune",
+                          `select-all-text` = "Toutes",
+                          `live-Search` = TRUE,
+                          style = paste("btn-",i, sep="")
+                        )
+                      )
+                    } )#fin fonction
+                  )#fin box
+                ),
+                #---- ligne 3 : occupation ----
+                fluidRow( #ligne 3.1 schémas zones occupation
+                  box(
+                    id="schemas_occ",
+                    width=12,
+                    title="zones d'occupation au cours du temps",
+                    collapsible = TRUE,
+                    img(src="zones_occupation.svg", size="80%")
+                    
+                  )),
+                fluidRow( # ligne 3.2 graphique appartenance zones d'occupation
+                  box(
+                    id="graph_occ",
+                    width=12,
+                    title="appartenance des OH aux différentes zones d'occupation au cours du temps",
+                    collapsible = TRUE,
+                    plotOutput("plot_occupation") %>% withSpinner(type=8, size=0.5)
+                  )
+                ),
+                #---- ligne 4 : densité  ----
+                fluidRow( # ligne 4.1 schémas zones de densité
+                  box(
+                    id="schemas_dens",
+                    width=12,
+                    title="zones de densité au cours du temps",
+                    collapsible = TRUE,
+                    img(src="zones_densite.svg", size="80%")
+                  )),
+                fluidRow( # ligne 4.2 graphique appartenance zones densité
+                  box(
+                    id="graph_dens",
+                    width=12,
+                    title="appartenance des OH aux différentes zones de densité au cours du temps",
+                    collapsible = TRUE,
+                    plotOutput("plot_densite") %>% withSpinner(type=8, size=0.5)
+                  )
+                )
+                
+        ), #fin tabzone
+        
         #------------------------------- 3. INFO ------------------
         
         tabItem(tabName="info",
                 fluidRow( 
-                  column(6, source.info),
-                  column (6, source.usage)
+                  column(8, source.info)
+                  # column (6, source.usage)
                 )
         )
-      ) #fin tabItems
+      ) #fin tabinfo
       
     )
     

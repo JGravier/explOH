@@ -6,7 +6,6 @@
 
 options(encoding = "UTF-8")
 
-options(shiny.sanitize.errors=TRUE)
 #---- LIBRAIRIES ---- 
 #librairies generales
 library(shiny)
