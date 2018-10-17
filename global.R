@@ -1,7 +1,7 @@
 ################################
 # Shiny app pour afficher les objets selon le temps 
-# L. Nahassia, mai 2018
-# elements globaux pour explOH_11
+# L. Nahassia, aout 2018
+# elements globaux
 ################################
 
 options(encoding = "UTF-8")
@@ -12,6 +12,7 @@ library(shiny)
 library(shinyjs)
 library(shinyWidgets)
 library(shinydashboard)
+library(shinycssloaders)
 library(htmlwidgets)
 library(leaflet)
 library(RSQLite)
@@ -37,8 +38,9 @@ library(rgdal)
 library(sf)
 library(rgdal)
 
-#sources autres fichiers
+#sources fichiers
 source("global_AFC.R")
+source("global_zones.R")
 source("charge_data.R", local=FALSE)
 
 
@@ -62,9 +64,10 @@ couleurs_portees <-c("#febd2b", "#fe892f", "#ff5733", "#ff2b37")
 palette_portees <- colorFactor(couleurs_portees, unique(OH_geom$PORTEE_NOM))
 ##APPARITION
 couleurs_fiab <-c("#018571", "#80cdc1", "#dfc27d", "#a6611a", "grey")
-palette_fiab <- colorFactor(couleurs_fiab, order(levels(OH_geom$FIAB_APP)))
+palette_fiab_a <- colorFactor(couleurs_fiab, order(levels(OH_geom$FIAB_APP)))
+palette_fiab_d <- colorFactor(couleurs_fiab, rev(order(levels(OH_geom$FIAB_DISP))))
 #CAH
-palette_CAH  <- colorRampPalette(brewer.pal(7,"Set2"))
+palette_CAH  <- colorRampPalette(c("#E8C95D","#eb8179","#85dbbd","#628aba","#a39e96"))
 
   
 
@@ -103,9 +106,9 @@ texte_popup_poles <- function(df) {
 
 #----------------------------------- ICONES POLES ----
 polesIcons <- iconList(
-  economique = makeIcon(iconUrl="./img/icone_eco.png"),
-  politique = makeIcon(iconUrl="./img/icone_pol.png"),
-  religieux = makeIcon(iconUrl="./img/icone_rel.png")
+  economique = makeIcon(iconUrl="icone_eco.png"),
+  politique = makeIcon(iconUrl="icone_pol.png"),
+  religieux = makeIcon(iconUrl="icone_rel.png")
   
 )
 
@@ -122,7 +125,7 @@ theme_ln <- function()
        plot.background = element_rect(fill="grey87"),
        plot.title = element_text(size=13, face="bold"),
        plot.subtitle = element_text(size=11, face="plain"),
-       plot.caption = element_text(size=10, color="white"),
+       plot.caption = element_text(size=10, color="grey60"),
        plot.margin = unit(c(0.5,1,0.3,1), "lines"),
        axis.ticks =  element_line(colour = "grey75"),
        axis.title=element_text(size=11),

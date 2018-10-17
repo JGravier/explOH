@@ -1,9 +1,8 @@
-###############################################
-## Analyses factorielles
-## Descriptions élémentaires - chapitre 6
-## L. Nahassia, 2018
-##############################################
-
+################################
+# Shiny app pour afficher les objets selon le temps 
+# L. Nahassia, aout 2018
+# analyse factorielle et CAH
+################################
 
 #chargement des tableaux de contingence -------------------------------
 tab_urb_50 <- read.table("./data/tab_AFC/tab_urb_50.csv", sep=";", dec=",")

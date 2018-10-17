@@ -1,3 +1,15 @@
+/* fonts */
+
+/* #1 Regular Weight */
+@font-face {
+	font-family: "JosefinSansBold";
+	font-style: normal;
+	font-weight: normal;
+	src: url('JosefinSans-Bold.ttf') format('truetype');
+}
+
+
+
 /*couleurs generales*/
 
 a:link, a:visited {
@@ -22,6 +34,26 @@ a:hover{
 
 
 /*titres et signature*/
+.div_titre{
+  margin-top:8px;
+  
+}
+  
+ .titre{
+display:inline;
+font-family: 'JosefinSansBold', sans-serif;
+font-size: 20pt;
+margin-left: 20px;
+color: #222d32;
+}
+
+.stitre{
+display:inline;
+color: #222d32;
+margin-left: 10px;
+}
+
+
 .titre_info {
 	font-size:15pt;
 	font-weight: 700

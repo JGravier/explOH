@@ -1,14 +1,13 @@
 ################################
 # Shiny app pour afficher les objets selon le temps avec leaflet
-# L. Nahassia, mai 2018
-# Server pour explOH_11
+# L. Nahassia, aout 2018
+# Server
 ################################
 
 #####
 library(shiny)
 
 shinyServer(function(input, output, session) {
-  
   
   ###########################################################################
   ##################### ONGLET 1 : exploration carte OH #####################
@@ -172,12 +171,19 @@ shinyServer(function(input, output, session) {
     legende$val_legend <- as.factor(OH_geom$PORTEE_NOM)
     legende$title_legend <- "Niveau de portée des OH"}
     
-    else if (input$couleur_OH == "fiab") # afficher selon fiabilité
+    else if (input$couleur_OH == "fiab_a") # afficher selon fiabilité d'apparition
     { legende$alpha_polygones <- 0.9
-    legende$pal_couleurs <- palette_fiab
-    legende$pal_legend <- palette_fiab
+    legende$pal_couleurs <- palette_fiab_a
+    legende$pal_legend <- palette_fiab_a
     legende$val_legend <- as.factor(OH_geom$FIAB_APP)
     legende$title_legend <- "Fiabilité de la date d'apparition des OH"}
+    
+    else if (input$couleur_OH == "fiab_d") # afficher selon fiabilité de disparition
+    { legende$alpha_polygones <- 0.9
+    legende$pal_couleurs <- palette_fiab_d
+    legende$pal_legend <- palette_fiab_d
+    legende$val_legend <- as.factor(OH_geom$FIAB_DISP)
+    legende$title_legend <- "Fiabilité de la date de disparition des OH"}
     
     #Subset en cours d'affichage (OH_A) à redessiner
     OH_subset$tab_add <- OH_subset$OH_A
@@ -209,10 +215,14 @@ shinyServer(function(input, output, session) {
     {  couleurs_pg <- ~legende$pal_couleurs(OH_pg$PORTEE_NOM)
     couleurs_pl<- ~legende$pal_couleurs(OH_pl$PORTEE_NOM)
     couleurs_pt <- ~legende$pal_couleurs(OH_pt$PORTEE_NOM)}
-    else if (input$couleur_OH == "fiab")
+    else if (input$couleur_OH == "fiab_a")
     {  couleurs_pg <- ~legende$pal_couleurs(OH_pg$FIAB_APP)
     couleurs_pl<- ~legende$pal_couleurs(OH_pl$FIAB_APP)
     couleurs_pt <- ~legende$pal_couleurs(OH_pt$FIAB_APP)}
+    else if (input$couleur_OH == "fiab_d")
+    {  couleurs_pg <- ~legende$pal_couleurs(OH_pg$FIAB_DISP)
+    couleurs_pl<- ~legende$pal_couleurs(OH_pl$FIAB_DISP)
+    couleurs_pt <- ~legende$pal_couleurs(OH_pt$FIAB_DISP)}
     
     #POPUP
     popup_ens_urb <- texte_popup_ens_urb(ens_urb_subset$tab)
@@ -299,31 +309,32 @@ shinyServer(function(input, output, session) {
   })
   
   
-  #tTELECHARGEMENT SUBSET
-  
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      if (input$type_dl == "geojson"){return("selectionOH.geojson")}
-      else if(input$type_dl == "sqlite"){return("selectionOH.sqlite")}
-      else if(input$type_dl == "csv"){return("selectionOH.csv")}
-      else if(input$type_dl == "shapefile"){return("selectionOH.shp")}
-    },
-    content = function(file) {
-      dlOH <- st_transform(OH_subset$OH_A, proj_2154) %>% select(-geom_wkt)
-      if(input$type_dl == "csv"){st_write(obj=dlOH, dsn=file, layer_options = "GEOMETRY=AS_WKT")}
-      else if(input$type_dl == "geojson"){st_write(obj=dlOH, dsn=file, layer="OH")}
-      else if(input$type_dl == "sqlite"){st_write(obj=dlOH, dsn=file, layer="OH", dataset_options="SPATIALITE=YES", layer_options="FORMAT=SPATIALITE")}
+  #TELECHARGEMENT SUBSET
+  # affiche le bouton seulement si le mdp est bon
+  observeEvent(input$password_sub, {
+    if(input$password_dl=="archeo7324") {
+      output$place_dl <-renderUI(
+        tagList(
+          downloadButton("downloadData", label="télécharger")
+        )
+      )
+      output$downloadData <- downloadHandler(
+        filename = function() {
+          if (input$type_dl == "geojson"){return("selectionOH.geojson")}
+          else if(input$type_dl == "sqlite"){return("selectionOH.sqlite")}
+          else if(input$type_dl == "csv"){return("selectionOH.csv")}
+          else if(input$type_dl == "shapefile"){return("selectionOH.shp")}
+        },
+        content = function(file) {
+          dlOH <- st_transform(OH_subset$OH_A, proj_2154) %>% select(-geom_wkt)
+          if(input$type_dl == "csv"){st_write(obj=dlOH, dsn=file, layer_options = "GEOMETRY=AS_WKT")}
+          else if(input$type_dl == "geojson"){st_write(obj=dlOH, dsn=file, layer="OH")}
+          else if(input$type_dl == "sqlite"){st_write(obj=dlOH, dsn=file, layer="OH", dataset_options="SPATIALITE=YES", layer_options="FORMAT=SPATIALITE")}
+        }
+      )
     }
-  )
-  
-  # output$downloadMap <- downloadHandler(
-  #   filename = "carte.png",
-  #   content=function(file){
-  #     mapshot(x=output$map, file=file, remove_controls =c("zoomControl", "layersControl"))
-  #     
-  #   })
-  
-  
+    else{output$place_dl <- output$place_dl <-renderUI(tagList()) }
+  })
   #----------------------------------- #1.6. INTERACTIONS AUTRES ----
   
   # mise en valeur de l'OH sélectionnée, même si elle est hors de ce qui est affiché
@@ -749,9 +760,31 @@ shinyServer(function(input, output, session) {
       
     )
     
-    
   })
   
+  ###########################################################################
+  ##################### ONGLET 3 : ZONES ##############################
+  ###########################################################################
+  
+  observe(priority = 12, {
+    
+    val_usage <- lapply(
+      1:6, 
+      function(i){
+        substring(
+          eval(parse(text=paste("input$picker_zones_",i,sep=""))), #récupère toutes les options cochées
+          1,2 #ne garde que les deux premiers caractères (=les numéros)
+        )
+      }) %>% unlist %>% as.numeric
+    
+    tab <- OH_zones %>% filter(V_USAGE %in% val_usage)
+    stitre <- paste("OH de valeur d'usage :", paste(val_usage, sep = '', collapse = ', '))
+    
+    output$plot_occupation <- renderPlot(plot_occupation_portees(tab,stitre))
+    output$plot_densite <- renderPlot(plot_densite_portees(tab,stitre))
+    
+    
+  })
   
   
 }) # fin du serveur

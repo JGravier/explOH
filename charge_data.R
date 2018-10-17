@@ -1,7 +1,7 @@
 ################################
 # Shiny app pour afficher les objets selon le temps 
-# L. Nahassia, mai 2018
-# chargement des données pour explOH_11
+# L. Nahassia, aout 2018
+# chargement des données
 ################################
 
 
@@ -10,24 +10,28 @@ proj_2154 = EPSG[which(EPSG$code == 2154), "prj4"]
 proj_4326 = EPSG[which(EPSG$code == 4326), "prj4"]
 
 
-#----------------------------------- 1. Données contextuelles ----
+#----------------------------------- 1. Données contextuelles & csv analyses ----
 
-#Import > shapefile
+#shapefiles contextes
 ens_urb_total <- st_read(dsn="./data/shapes", layer="ensembles_urbains", stringsAsFactors = FALSE, quiet = TRUE)
 ens_urb <- st_transform(ens_urb_total, proj_4326)
 ens_urb$date_fin <- ens_urb$date_fin-1 #dates à modifier dans shapefile d'origine ? pas nécessairement choix conceptuel fort à ne trancher que au moment de l'utilisation
-# View(ens_urb_total)
 traits_rive_total <- st_read(dsn="./data/shapes", layer="traits_rive_2154", stringsAsFactors = FALSE, quiet = TRUE)
 traits_rive <- st_transform(traits_rive_total, proj_4326)
 poles_total <- st_read(dsn="./data/shapes", layer="poles", stringsAsFactors = FALSE, quiet = TRUE)
 poles <- st_transform(poles_total, proj_4326)
 
+#OH pour analyse zone
+OH_zones <- read.csv("./data/OH_zone.csv", encoding="UTF-8", header=TRUE)
+OH_zones$deb_zone_densite <- factor(OH_zones$deb_zone_densite, levels=c("3","2","1","0"))
+
+
 #-----------------------------------  2. Objets historiques ----
 
 #geometries riches
-points <- st_read(dsn="./data/OH_3geom.sqlite", layer="oh_pt_uniques", quiet=TRUE)
-lignes <- st_read(dsn="./data/OH_3geom.sqlite", layer="oh_pl_uniques", quiet=TRUE)
-polygones <- st_read(dsn="./data/OH_3geom.sqlite", layer="oh_pg_uniques", quiet=TRUE)
+points <- suppressWarnings(st_read(dsn="./data/OH_3geom.sqlite", layer="oh_pt_uniques", quiet=TRUE))
+lignes <- suppressWarnings(st_read(dsn="./data/OH_3geom.sqlite", layer="oh_pl_uniques", quiet=TRUE))
+polygones <- suppressWarnings(st_read(dsn="./data/OH_3geom.sqlite", layer="oh_pg_uniques", quiet=TRUE))
 OH_geom_base <- rbind(points,lignes,polygones)
 OH_geom <- OH_geom_base[OH_geom_base$V_USAGE != 11
                         & OH_geom_base$V_USAGE < 70
@@ -66,9 +70,12 @@ OH_geom$PORTEE_NOM <- cut (OH_geom$PORTEE,
                           right=FALSE,
                           include.lowest = TRUE)
 
-#recodage de la plus petite date = -25
+#recodage de la plus petite date = -25 # voir si nécessaire fausse les données...
 OH_geom$DATE_DEB[OH_geom$DATE_DEB < -25] <- -25
-# OH_ponctuels$DATE_DEB[OH_ponctuels$DATE_DEB < -25] <- -25
+#recodage de la fiab disp des OH qui se finissent en 2015
+OH_geom$FIAB_DISP[OH_geom$FIAB_DISP == ""] <- 0
+OH_geom$FIAB_DISP <- droplevels(OH_geom$FIAB_DISP)
+
 
 #----------------------------------- 3. Listes vurb et vusage ----
 EF <- st_read(dsn="./data/OH_3geom.sqlite", layer="EF", quiet=TRUE)
