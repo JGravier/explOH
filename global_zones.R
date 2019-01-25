@@ -14,10 +14,10 @@ plot_occupation_portees <- function(df, sous_titre) {
         fill="grey10") +
       geom_histogram( 
         binwidth=100,
-        aes(alpha=0.7, fill=deb_zone_urb2)) +
+        aes(alpha=0.7, fill=deb_urb2)) +
       facet_grid(
-        deb_zone_urb2~PORTEE,
-        labeller=labeller(deb_zone_urb2=facet_labels_zonesurb, PORTEE=facet_labels_portee))+
+        deb_urb2~PORTEE,
+        labeller=labeller(deb_urb2=facet_labels_zonesurb, PORTEE=facet_labels_portee))+
       scale_x_continuous(breaks = c(1,seq(100,1900,100)))+
       scale_fill_manual(values=c("A"="#a05050", "B"="#c8ab37", "C"="darkgrey"))+
       labs(title="Localisation des OH au moment de leur apparition par type d'occupation (urbaine/intermédiaire/occupation non urbaine)",
@@ -42,10 +42,10 @@ plot_densite_portees <- function(df, sous_titre) {
         fill="grey10") +
       geom_histogram( 
         binwidth=100,
-        aes(alpha=0.4, fill=deb_zone_densite)) +
+        aes(alpha=0.4, fill=deb_densite)) +
       facet_grid(
-        deb_zone_densite~PORTEE,
-        labeller=labeller(deb_zone_densite=facet_labels_dens, PORTEE=facet_labels_portee))+
+        deb_densite~PORTEE,
+        labeller=labeller(deb_densite=facet_labels_dens, PORTEE=facet_labels_portee))+
       scale_x_continuous(breaks = c(1,seq(100,1900,100)))+
       scale_fill_manual(values=c("3"="#016957", "2"="#3ab29d", "1"="#aaddd4", "0"="darkgrey"))+
       labs(title="Localisation des OH au moment de leur apparition par type d'espace (densité)",

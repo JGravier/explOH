@@ -246,10 +246,9 @@ shinyServer(function(input, output, session) {
       #contexte
       addPolygons(data=ens_urb_subset$tab,
                   group="ensembles urbains",
-                  color="black",
-                  weight=2,
-                  dashArray="3,5",
-                  fill=FALSE,
+                  color=palette_EU(ens_urb_subset$tab$occupation),
+                  fillOpacity=0.1*ens_urb_subset$tab$densite,
+                  weight=1,
                   popup=popup_ens_urb) %>%
       addPolylines(data=traits_rive_subset$tab,
                    group="traits de rive",

@@ -13,9 +13,9 @@ proj_4326 = EPSG[which(EPSG$code == 4326), "prj4"]
 #----------------------------------- 1. Données contextuelles & csv analyses ----
 
 #shapefiles contextes
-ens_urb_total <- st_read(dsn="./data/shapes", layer="ensembles_urbains", stringsAsFactors = FALSE, quiet = TRUE)
+ens_urb_total <- read_sf("./data/ens_urbain.geojson", quiet=TRUE)
+st_crs(ens_urb_total) <- proj_2154 
 ens_urb <- st_transform(ens_urb_total, proj_4326)
-ens_urb$date_fin <- ens_urb$date_fin-1 #dates à modifier dans shapefile d'origine ? pas nécessairement choix conceptuel fort à ne trancher que au moment de l'utilisation
 traits_rive_total <- st_read(dsn="./data/shapes", layer="traits_rive_2154", stringsAsFactors = FALSE, quiet = TRUE)
 traits_rive <- st_transform(traits_rive_total, proj_4326)
 poles_total <- st_read(dsn="./data/shapes", layer="poles", stringsAsFactors = FALSE, quiet = TRUE)
@@ -23,7 +23,7 @@ poles <- st_transform(poles_total, proj_4326)
 
 #OH pour analyse zone
 OH_zones <- read.csv("./data/OH_zone.csv", encoding="UTF-8", header=TRUE)
-OH_zones$deb_zone_densite <- factor(OH_zones$deb_zone_densite, levels=c("3","2","1","0"))
+OH_zones$deb_densite <- factor(OH_zones$deb_densite, levels=c("3","2","1","0"))
 
 
 #-----------------------------------  2. Objets historiques ----

@@ -68,6 +68,9 @@ palette_fiab_a <- colorFactor(couleurs_fiab, order(levels(OH_geom$FIAB_APP)))
 palette_fiab_d <- colorFactor(couleurs_fiab, rev(order(levels(OH_geom$FIAB_DISP))))
 #CAH
 palette_CAH  <- colorRampPalette(c("#E8C95D","#eb8179","#85dbbd","#628aba","#a39e96"))
+#ensembles urbains
+couleurs_EU  <- c("#c8ab37","#a05050")
+palette_EU <- colorFactor(couleurs_EU, unique(ens_urb$occupation))
 
   
 
@@ -86,10 +89,11 @@ texte_popup_OH <- function(df) {
 
 texte_popup_ens_urb <- function(df) {
   paste(sep="",
-        "<h5> <b>", df$nom, " </h5> <br/>", 
-        df$date_debut,"-",df$date_fin,"<br/> </b> Urbain : ", df$urbain,
+        "<h5> <b>ID: ", df$ID, ", ", df$ID_nom, " </h5></b>", 
+        df$date_debut,"-",df$date_fin,
+        "<br/> Type d'occupation : ", df$occupation,
         "<br/> Densité : ", df$densite,
-        "<br/> Description : ", df$descriptio)
+        "<br/> Description : ", df$description)
 }
 
 

@@ -24,7 +24,6 @@ shinyUI(
         menuItem("exploration globale", tabName="explo_carte", icon = icon("search")),
         menuItem("analyse factorielle", tabName="afc", icon=icon("sort-amount-desc")),
         menuItem("analyse par zone", tabName="zones", icon=icon("square-o")),
-        menuItem("distance aux pôles", tabName="poles", icon=icon("star")),
         menuItem("informations", tabName ="info", icon=icon("info"))
       )
     ),
@@ -428,8 +427,9 @@ shinyUI(
                   box(
                     id="schemas_occ",
                     width=12,
-                    title="zones d'occupation au cours du temps",
+                    title="Schémas des zones d'occupation au cours du temps",
                     collapsible = TRUE,
+                    collapsed = TRUE,
                     img(src="zones_occupation.svg", size="80%")
                     
                   )),
@@ -447,8 +447,9 @@ shinyUI(
                   box(
                     id="schemas_dens",
                     width=12,
-                    title="zones de densité au cours du temps",
+                    title="Schémas des zones de densité au cours du temps",
                     collapsible = TRUE,
+                    collapsed = TRUE,
                     img(src="zones_densite.svg", size="80%")
                   )),
                 fluidRow( # ligne 4.2 graphique appartenance zones densité
@@ -462,17 +463,17 @@ shinyUI(
                 )
                 
         ), #fin tabzone
-        #------------------------------- 4. ZONES ------------------
-        
-        tabItem(tabName="poles",
-                fluidRow( # ---- ligne 1 : description ----
-                          box( #description
-                            id="info_poles",
-                            width=8,
-                            solidHeader = TRUE,
-                            HTML("Cet onglet permet d'explorer la distance des OH à des pôles urbains. <i> En cours de construction </i>.")
-                          ))
-        ),
+        #------------------------------- 4. A FAIRE ------------------
+        # 
+        # tabItem(tabName="poles",
+        #         fluidRow( # ---- ligne 1 : description ----
+        #                   box( #description
+        #                     id="info_poles",
+        #                     width=8,
+        #                     solidHeader = TRUE,
+        #                     HTML("Cet onglet permet d'explorer la distance des OH à des pôles urbains. <i> En cours de construction </i>.")
+        #                   ))
+        # ),
         #------------------------------- 5. INFO ------------------
         
         tabItem(tabName="info",
