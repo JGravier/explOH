@@ -771,8 +771,8 @@ shinyServer(function(input, output, session) {
   ##################### ONGLET 3 : ZONES ##############################
   ###########################################################################
   
-  observe(priority = 12, {
-    
+  observe({
+    #tableau
     val_usage <- lapply(
       1:6, 
       function(i){
@@ -781,12 +781,22 @@ shinyServer(function(input, output, session) {
           1,2 #ne garde que les deux premiers caractères (=les numéros)
         )
       }) %>% unlist %>% as.numeric
-    
     tab <- OH_zones %>% filter(V_USAGE %in% val_usage)
+    #sous-titre
+    if (!isTruthy(input$stitre_plot_zones)){
     stitre <- paste("OH de valeur d'usage :", paste(val_usage, sep = '', collapse = ', '))
+    } else (stitre <- input$stitre_plot_zones)
+    #facettes par portées ou non
+    if(input$portee_plot_zones){
+      wrap1 <- "deb_urb2~PORTEE"
+      wrap2<- "deb_densite~PORTEE"
+    } else {
+      wrap1 <- "deb_urb2~."
+      wrap2 <- "deb_densite~."
+    }
     
-    output$plot_occupation <- renderPlot(plot_occupation_portees(tab,stitre))
-    output$plot_densite <- renderPlot(plot_densite_portees(tab,stitre))
+    output$plot_occupation <- renderPlot(plot_occupation_portees(tab,stitre,wrap1))
+    output$plot_densite <- renderPlot(plot_densite_portees(tab,stitre,wrap2))
     
     
   })

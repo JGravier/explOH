@@ -112,7 +112,7 @@ shinyUI(
                     br(),
                     # couleurs selon fonction, portée ou durée d'existance
                     tags$span("différenciation des OH selon leur :"),
-                    radioButtons("couleur_OH", label =NULL,
+                    awesomeRadio("couleur_OH", label =NULL,
                                  choices = list("valeur urbaine" = "v_urb", 
                                                 "portée" = "portee",
                                                 "fiabilité d'apparition"="fiab_a", 
@@ -254,8 +254,8 @@ shinyUI(
                           tabPanel(
                             id="tab1",
                             title="Histogramme",
-                            plotOutput("plot_inertie_axes",
-                                       height = "200px") %>% withSpinner(type=8, size=0.5)),
+                            jqui_resizable(plotOutput("plot_inertie_axes",
+                                       height = "200px")) %>% withSpinner(type=8, size=0.5)),
                           tabPanel(
                             id="tab2",
                             title="Tableau",
@@ -289,8 +289,8 @@ shinyUI(
                         column(
                           width=10,
                           class="plot_AFC",
-                          scatterD3Output("plot_biplot",
-                                          height = "600px") %>% withSpinner(type=8, size=0.5)
+                          jqui_resizable(scatterD3Output("plot_biplot",
+                                          height = "600px")) %>% withSpinner(type=8, size=0.5)
                         ),
                         column(
                           width=2,
@@ -349,10 +349,10 @@ shinyUI(
                       width=12,
                       title="Résultats de la CAH",
                       collapsible = TRUE,
-                      plotOutput("plot_dendro") %>% withSpinner(type=8, size=0.5),
+                      jqui_resizable(plotOutput("plot_dendro")) %>% withSpinner(type=8, size=0.5),
                       br(),
-                      plotOutput("plot_in_cah",
-                                 height = "200px") %>% withSpinner(type=8, size=0.5)
+                      jqui_resizable(plotOutput("plot_in_cah",
+                                 height = "200px")) %>% withSpinner(type=8, size=0.5)
                     ),#fin ligne 4.2
                     box(#ligne 4.3 caractérisation des classes
                       id="car_classes",
@@ -376,11 +376,11 @@ shinyUI(
                         column(
                           id="graph_frise_classes",
                           width=10,
-                          plotOutput("frise_classes",
-                                     height = "110px")%>% withSpinner(type=8, size=0.5)
+                          jqui_resizable(plotOutput("frise_classes",
+                                     height = "110px"))%>% withSpinner(type=8, size=0.5)
                         )),#fin ligne 4.3.1
                       #ligne 4.3.2 plot des classes
-                      plotOutput("plot_classes")%>% withSpinner(type=8, size=0.5)  
+                      jqui_resizable(plotOutput("plot_classes"))%>% withSpinner(type=8, size=0.5)  
                     )#fin ligne 4.3
                     
                   ))#fin ligne 4 
@@ -390,16 +390,30 @@ shinyUI(
         #------------------------------- 3. ZONES ------------------
         
         tabItem(tabName="zones",
-                fluidRow( # ---- ligne 1 : description + choix OH ----
-                          box( #description
-                            id="info_zones",
+                fluidRow( # ---- ligne 1 : description + options + choix OH ----
+                          column(
+                            id="info_opt_zone",
                             width=8,
-                            solidHeader = TRUE,
-                            div("Cet onglet permet d'explorer l'appartenance des OH à des types d'espaces (zone urbaines/intermédiare/non urbaine et zones de densités différentes). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2018."),
-                            br(),
-                            div("Les zones d'occupation et de densité peuvent être affichées dans l'onglet \"exploration globale\" en cliquant sur", img(src="icone_leaflet.png", alt="l'icône en haut à droite"), "sur la carte.")
-                          ),
+                            box( 
+                              #description
+                              id="info_zones",
+                              width=12,
+                              solidHeader = TRUE,
+                              div("Cet onglet permet d'explorer l'appartenance des OH à des types d'espaces (zone urbaines/intermédiare/non urbaine et zones de densités différentes). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2018."),
+                              br(),
+                              div("Les zones d'occupation et de densité peuvent être affichées dans l'onglet \"exploration globale\" en cliquant sur", img(src="icone_leaflet.png", alt="l'icône en haut à droite"), "sur la carte.")
+                            ),
+                            box(
+                              #options
+                              id="opt_zones",
+                              width=12,
+                              title="options des graphiques",
+                              tags$span("personaliser le sous-titre des graphiques :"),
+                              textInput("stitre_plot_zones",label=NULL, value = NA),
+                              awesomeCheckbox("portee_plot_zones", label = "afficher les résultats par portées des OH", value = TRUE)
+                            )), #fin première colonne
                           box( # choix OH
+                            id="choix_zones",
                             width=4,
                             title="choix des OH à tester",
                             # fonctions pour afficher les types d'OH
@@ -407,7 +421,7 @@ shinyUI(
                               pickerInput(
                                 inputId = paste("picker_zones", i, sep="_"),
                                 choices = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
-                                selected = liste_vusage[substring(liste_vusage,1,2) < i*10+10 & substring(liste_vusage,1,2) >= i*10],
+                                selected = liste_vusage[1],
                                 multiple = TRUE,
                                 options = list(
                                   `selected-text-format` = "count>-1",
@@ -439,7 +453,7 @@ shinyUI(
                     width=12,
                     title="appartenance des OH aux différentes zones d'occupation au cours du temps",
                     collapsible = TRUE,
-                    plotOutput("plot_occupation") %>% withSpinner(type=8, size=0.5)
+                    jqui_resizable(plotOutput("plot_occupation")) %>% withSpinner(type=8, size=0.5)
                   )
                 ),
                 #---- ligne 4 : densité  ----
@@ -458,7 +472,7 @@ shinyUI(
                     width=12,
                     title="appartenance des OH aux différentes zones de densité au cours du temps",
                     collapsible = TRUE,
-                    plotOutput("plot_densite") %>% withSpinner(type=8, size=0.5)
+                    jqui_resizable(plotOutput("plot_densite")) %>% withSpinner(type=8, size=0.5)
                   )
                 )
                 
