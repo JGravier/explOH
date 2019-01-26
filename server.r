@@ -34,9 +34,9 @@ shinyServer(function(input, output, session) {
       ##layer control
       addLayersControl(
         baseGroups = c("clair", "satellite"),
-        overlayGroups = c("géometries des OH", "ensembles urbains", "traits de rive", "pôles urbains"),
+        overlayGroups = c("géometries des OH", "ensembles urbains occupation", "ensembles urbains densité","traits de rive", "pôles urbains"),
         options=layersControlOptions(autoZIndex=TRUE)) %>%
-      hideGroup(c("traits de rive","ensembles urbains", "pôles urbains")) %>%    
+      hideGroup(c("traits de rive","ensembles urbains occupation", "ensembles urbains densité", "pôles urbains")) %>%    
       
       #légende
       addLegend(position="bottomleft", 
@@ -238,16 +238,22 @@ shinyServer(function(input, output, session) {
     # CARTE
     leafletProxy("map", data=OH_pt) %>%
       clearMarkers() %>%
-      clearGroup(group=c("ensembles urbains", "traits de rive", "poles urbains")) %>%
+      clearGroup(group=c("ensembles urbains occupation", "ensembles urbains densité", "traits de rive", "poles urbains")) %>%
       removeControl(layerId = c("nombre","periode")) %>% 
       #nombre d'OH
       addControl(position="bottomleft", html=OH_subset$message, layerId = "nombre") %>% 
       addControl(position="bottomleft", html=subset_dates, layerId = "periode") %>%
       #contexte
       addPolygons(data=ens_urb_subset$tab,
-                  group="ensembles urbains",
+                  group="ensembles urbains occupation",
                   color=palette_EU(ens_urb_subset$tab$occupation),
                   fillOpacity=0.1*ens_urb_subset$tab$densite,
+                  weight=1,
+                  popup=popup_ens_urb) %>%
+      addPolygons(data=ens_urb_subset$tab,
+                  group="ensembles urbains densité",
+                  color=palette_EU2(ens_urb_subset$tab$densite),
+                  fillOpacity=0.2,
                   weight=1,
                   popup=popup_ens_urb) %>%
       addPolylines(data=traits_rive_subset$tab,

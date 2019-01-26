@@ -71,6 +71,8 @@ palette_CAH  <- colorRampPalette(c("#E8C95D","#eb8179","#85dbbd","#628aba","#a39
 #ensembles urbains
 couleurs_EU  <- c("#c8ab37","#a05050")
 palette_EU <- colorFactor(couleurs_EU, unique(ens_urb$occupation))
+couleurs_EU2 <- c("#aaddd4","#3ab29d","#016957")
+palette_EU2 <- colorFactor(couleurs_EU2, unique(ens_urb$densite))
 
   
 

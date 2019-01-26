@@ -427,7 +427,7 @@ shinyUI(
                   box(
                     id="schemas_occ",
                     width=12,
-                    title="Schémas des zones d'occupation au cours du temps",
+                    title="schémas des zones d'occupation au cours du temps",
                     collapsible = TRUE,
                     collapsed = TRUE,
                     img(src="zones_occupation.svg", size="80%")
@@ -447,7 +447,7 @@ shinyUI(
                   box(
                     id="schemas_dens",
                     width=12,
-                    title="Schémas des zones de densité au cours du temps",
+                    title="schémas des zones de densité au cours du temps",
                     collapsible = TRUE,
                     collapsed = TRUE,
                     img(src="zones_densite.svg", size="80%")
