@@ -38,8 +38,8 @@ shinyUI(
       tags$head(tags$link(rel="icon", type="image/png", href="favicon.png"),
                 tags$script(src ="https://rawgit.com/rowanwins/leaflet-easyPrint/gh-pages/dist/bundle.js"),
                 tags$title("explOH"),
-                tags$meta(name="description",content="Cette application web permet d'explorer de manière interactive les Objets Historiques de la base de données ToToPI, ainsi que de générer automatique des résultats de traitements pour des analyses factorielles et des analyses spatiales."),
-                includeCSS("www/style.css")
+                includeCSS("www/style.css"),
+                tags$meta(name="description",content="Cette application web permet d'explorer de manière interactive les Objets Historiques de la BDD ToToPI, ainsi que de générer automatique des résultats de traitements pour des analyses factorielles et des analyses spatiales.")
                 #attention pas d'accent dans le css > erreur utf
       ),
       
