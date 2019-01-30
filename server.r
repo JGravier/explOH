@@ -45,6 +45,17 @@ shinyServer(function(input, output, session) {
                 values = OH_geom$V_URB_NOM, 
                 opacity = 1) %>% 
       
+      #bouton mesure
+      addMeasure(
+        position = "bottomright",
+        primaryLengthUnit = "meters",
+        secondaryLengthUnit = "kilometers",
+        primaryAreaUnit = "sqmeters",
+        activeColor = "#428BCA",
+        completedColor="428BCA",
+        localization="fr"
+      ) %>% 
+      
       #bouton pour export
       onRender(
         "function(el, x) {

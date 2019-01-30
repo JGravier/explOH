@@ -18,7 +18,7 @@ plot_occupation_portees <- function(df, sous_titre, wrap) {
     facet_grid(
       wrap,
       labeller=labeller(deb_urb2=facet_labels_zonesurb, PORTEE=facet_labels_portee))+
-    scale_x_continuous(breaks = c(1,seq(100,1900,100)))+
+    scale_x_continuous(breaks = c(-25,1,seq(100,1900,100),2015))+
     scale_fill_manual(values=c("A"="#a05050", "B"="#c8ab37", "C"="darkgrey"))+
     labs(title="Localisation des OH au moment de leur apparition par type d'occupation (urbaine/intermédiaire/occupation non urbaine)",
          subtitle=sous_titre,
@@ -46,7 +46,7 @@ plot_densite_portees <- function(df, sous_titre, wrap) {
     facet_grid(
       wrap,
       labeller=labeller(deb_densite=facet_labels_dens, PORTEE=facet_labels_portee))+
-    scale_x_continuous(breaks = c(1,seq(100,1900,100)))+
+    scale_x_continuous(breaks = c(-25,1,seq(100,1900,100),2015))+
     scale_fill_manual(values=c("3"="#016957", "2"="#3ab29d", "1"="#aaddd4", "0"="darkgrey"))+
     labs(title="Localisation des OH au moment de leur apparition par type d'espace (densité)",
          subtitle=sous_titre,
