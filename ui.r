@@ -38,10 +38,9 @@ shinyUI(
       tags$head(tags$link(rel="icon", type="image/png", href="favicon.png"),
                 tags$script(src ="https://rawgit.com/rowanwins/leaflet-easyPrint/gh-pages/dist/bundle.js"),
                 tags$title("explOH"),
-                includeCSS("www/style.css"),
-                tags$meta(name="description",content="Cette application web permet d'explorer de manière interactive les Objets Historiques de la BDD ToToPI, ainsi que de générer automatique des résultats de traitements pour des analyses factorielles et des analyses spatiales.")
-                #attention pas d'accent dans le css > erreur utf
-      ),
+                includeCSS("www/style.css"),#attention pas d'accent dans le css > erreur utf
+                tags$meta(name="description",content="Cette application web permet d'explorer de manière interactive les Objets Historiques de la BDD ToToPI, et de générer automatiquement des résultats de traitements pour des analyses factorielles et des analyses spatiales.")
+                ),
       
       useShinyjs(),
       
@@ -255,8 +254,8 @@ shinyUI(
                           tabPanel(
                             id="tab1",
                             title="Histogramme",
-                            jqui_resizable(plotOutput("plot_inertie_axes",
-                                       height = "200px")) %>% withSpinner(type=8, size=0.5)),
+                            plotOutput("plot_inertie_axes",
+                                       height = "200px") %>% withSpinner(type=8, size=0.5)),
                           tabPanel(
                             id="tab2",
                             title="Tableau",
@@ -290,8 +289,8 @@ shinyUI(
                         column(
                           width=10,
                           class="plot_AFC",
-                          jqui_resizable(scatterD3Output("plot_biplot",
-                                          height = "600px")) %>% withSpinner(type=8, size=0.5)
+                          scatterD3Output("plot_biplot",
+                                          height = "600px") %>% withSpinner(type=8, size=0.5)
                         ),
                         column(
                           width=2,
@@ -350,10 +349,10 @@ shinyUI(
                       width=12,
                       title="Résultats de la CAH",
                       collapsible = TRUE,
-                      jqui_resizable(plotOutput("plot_dendro")) %>% withSpinner(type=8, size=0.5),
+                      plotOutput("plot_dendro") %>% withSpinner(type=8, size=0.5),
                       br(),
-                      jqui_resizable(plotOutput("plot_in_cah",
-                                 height = "200px")) %>% withSpinner(type=8, size=0.5)
+                      plotOutput("plot_in_cah",
+                                 height = "200px") %>% withSpinner(type=8, size=0.5)
                     ),#fin ligne 4.2
                     box(#ligne 4.3 caractérisation des classes
                       id="car_classes",
@@ -377,11 +376,11 @@ shinyUI(
                         column(
                           id="graph_frise_classes",
                           width=10,
-                          jqui_resizable(plotOutput("frise_classes",
-                                     height = "110px"))%>% withSpinner(type=8, size=0.5)
+                         plotOutput("frise_classes",
+                                     height = "110px")%>% withSpinner(type=8, size=0.5)
                         )),#fin ligne 4.3.1
                       #ligne 4.3.2 plot des classes
-                      jqui_resizable(plotOutput("plot_classes"))%>% withSpinner(type=8, size=0.5)  
+                      plotOutput("plot_classes")%>% withSpinner(type=8, size=0.5)  
                     )#fin ligne 4.3
                     
                   ))#fin ligne 4 
