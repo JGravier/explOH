@@ -40,13 +40,13 @@ shinyUI(
                 tags$title("explOH"),
                 includeCSS("www/style.css"),#attention pas d'accent dans le css > erreur utf
                 tags$meta(name="description",content="Cette application web permet d'explorer de manière interactive les Objets Historiques de la BDD ToToPI, et de générer automatiquement des résultats de traitements pour des analyses factorielles et des analyses spatiales.")
-                ),
+      ),
       
       useShinyjs(),
       
       tabItems(
         tabItem(tabName="explo_carte",
-                #------------------------------- 1. exploration ------------------
+                #------------------------------- 1. EXPLORATION ------------------
                 fluidRow(#---- ligne 1 : années ----
                          #curseur années
                          box ( 
@@ -55,7 +55,7 @@ shinyUI(
                            height = 128,
                            # slide temps
                            sliderInput("limites", label="",
-                                       min=-25, max=2015, value=c(-25, -25), round = 1, step=10, sep=" ",
+                                       min=-25, max=2015, value=c(-25, -25), round = 1, step=5, sep=" ",
                                        animate = animationOptions(interval=1500))
                          ),#fin curseur années
                          
@@ -71,14 +71,14 @@ shinyUI(
                          )#fin menu bornes temps
                 ),#fin fluidRow temps
                 
-                #---- ligne 2 : carte, affichage et identification OH ----
+                #---- ligne 2 : carte, affichage ----
                 fluidRow(
                   
                   #carte
                   column(
                     id="map_col",
                     width=9,
-                    leafletOutput("map", height = "600px")
+                    leafletOutput("map", height = "700px")
                   ),#fin carte
                   
                   #affichage
@@ -110,32 +110,31 @@ shinyUI(
                       )
                     } ),#fin sélection valeurs d'usage
                     br(),
+                    #affichage selon date début et date fin
+                    tags$span("surligner les OH :"),
+                    awesomeRadio("date_OH", label =NULL,
+                                 choices = list("aucune"="sur_off",
+                                                "qui apparaissent pendant la période" = "date_deb", 
+                                                "qui disparaissent pendant la période" = "date_fin"
+                                 ), 
+                                 selected = "sur_off",
+                                 inline = FALSE),
+                    br(),
                     # couleurs selon fonction, portée ou durée d'existance
                     tags$span("différenciation des OH selon leur :"),
                     awesomeRadio("couleur_OH", label =NULL,
                                  choices = list("valeur urbaine" = "v_urb", 
                                                 "portée" = "portee",
-                                                "fiabilité d'apparition"="fiab_a", 
-                                                "fiabilité de disparition"="fiab_d"), 
+                                                "fiabilité d'apparition"="fiab_a",
+                                                "fiabilité de disparition"="fiab_d"
+                                 ), 
                                  selected = "v_urb",
                                  inline = FALSE)
-                  ), #fin affichage
+                  )#fin affichage
                   
-                  #identification
-                  box(
-                    id="id_OH",
-                    width=3,
-                    title="identification des OH",
-                    #trouver OF
-                    searchInput("selec_OH", 
-                                label=NULL,
-                                placeholder= "Entrer un n° d'OH à trouver", 
-                                btnSearch = icon("search"),
-                                btnReset = icon("remove"))
-                  )#fin identification
-                ), #fin fluidrow carte, affichage, identification
+                ), #fin fluidrow carte, affichage
                 
-                #---- ligne 3 : téléchargement, tableau OH ----
+                #---- ligne 3 : téléchargement,identification OH et tableau OH ----
                 fluidRow(
                   #téléchargement
                   box( 
@@ -154,10 +153,23 @@ shinyUI(
                     uiOutput("place_dl")
                   ),#fin téléchargement
                   
+                  #identification
+                  box(
+                    id="id_OH",
+                    width=2,
+                    title="identification des OH",
+                    #trouver OF
+                    searchInput("selec_OH", 
+                                label=NULL,
+                                placeholder= "Entrer un n° d'OH à trouver", 
+                                btnSearch = icon("search"),
+                                btnReset = icon("remove"))
+                  ),#fin identification
+                  
                   #tableau OH
                   box(
                     id="tableau_OH",
-                    width=10,
+                    width=8,
                     title="tableau des OH sélectionnés",
                     collapsible = TRUE,
                     collapsed = TRUE,
@@ -376,7 +388,7 @@ shinyUI(
                         column(
                           id="graph_frise_classes",
                           width=10,
-                         plotOutput("frise_classes",
+                          plotOutput("frise_classes",
                                      height = "110px")%>% withSpinner(type=8, size=0.5)
                         )),#fin ligne 4.3.1
                       #ligne 4.3.2 plot des classes
@@ -399,9 +411,7 @@ shinyUI(
                               id="info_zones",
                               width=12,
                               solidHeader = TRUE,
-                              div("Cet onglet permet d'explorer l'appartenance des OH à des types d'espaces (zone urbaines/intermédiare/non urbaine et zones de densités différentes). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2018."),
-                              br(),
-                              div("Les zones d'occupation et de densité peuvent être affichées dans l'onglet \"exploration globale\" en cliquant sur", img(src="icone_leaflet.png", alt="l'icône en haut à droite"), "sur la carte.")
+                              source.zones
                             ),
                             box(
                               #options
@@ -436,64 +446,66 @@ shinyUI(
                             } )#fin fonction
                           )#fin box
                 ),
-                #---- ligne 3 : occupation ----
-                fluidRow( #ligne 3.1 schémas zones occupation
+                #---- ligne 2 : graphiques apparition  ----
+                fluidRow(
                   box(
-                    id="schemas_occ",
+                    id="apparition",
                     width=12,
-                    title="schémas des zones d'occupation au cours du temps",
+                    title="caractérisation de la localisation des OH à leur apparition",
                     collapsible = TRUE,
-                    collapsed = TRUE,
-                    img(src="zones_occupation.svg", size="80%")
-                    
+                    box(#ligne 2.1 apparition occupation
+                      id="graph_app_occ",
+                      width=12,
+                      title="par rapport aux types d'occupation du sol",
+                      solidHeader = TRUE,
+                      collapsible = TRUE,
+                      column(width=7,plotOutput("plot_occupation") %>% withSpinner(type=8, size=0.5)),
+                      column(width=5,plotOutput("plot_part_occupation") %>% withSpinner(type=8, size=0.5))
+                    ),
+                    box(#ligne 2.2 apparition densite
+                      id="graph_app_dens",
+                      width=12,
+                      title="par rapport aux densité du bâti",
+                      solidHeader = TRUE,
+                      collapsible = TRUE,
+                      column(width=7,plotOutput("plot_densite") %>% withSpinner(type=8, size=0.5)),
+                      column(width=5,plotOutput("plot_part_densite") %>% withSpinner(type=8, size=0.5))
+                    )
                   )),
-                fluidRow( # ligne 3.2 graphique appartenance zones d'occupation
+                #---- ligne 3 : graphique existence ----
+                fluidRow( 
                   box(
-                    id="graph_occ",
+                    id="existence",
                     width=12,
-                    title="appartenance des OH aux différentes zones d'occupation au cours du temps",
+                    title="caractérisation de la localisation des OH au cours de leur existence",
                     collapsible = TRUE,
-                    jqui_resizable(plotOutput("plot_occupation")) %>% withSpinner(type=8, size=0.5)
-                  )
-                ),
-                #---- ligne 4 : densité  ----
-                fluidRow( # ligne 4.1 schémas zones de densité
-                  box(
-                    id="schemas_dens",
-                    width=12,
-                    title="schémas des zones de densité au cours du temps",
-                    collapsible = TRUE,
-                    collapsed = TRUE,
-                    img(src="zones_densite.svg", size="80%")
-                  )),
-                fluidRow( # ligne 4.2 graphique appartenance zones densité
-                  box(
-                    id="graph_dens",
-                    width=12,
-                    title="appartenance des OH aux différentes zones de densité au cours du temps",
-                    collapsible = TRUE,
-                    jqui_resizable(plotOutput("plot_densite")) %>% withSpinner(type=8, size=0.5)
+                    box(#ligne 3.1 existence occupation
+                      id="graph_exi_occ",
+                      width=12,
+                      title="par rapport aux types d'occupation du sol",
+                      solidHeader = TRUE,
+                      collapsible = TRUE,
+                      column(width=7,plotOutput("plot_exi_occ") %>% withSpinner(type=8, size=0.5)),
+                      column(width=5,plotOutput("plot_trans_occ") %>% withSpinner(type=8, size=0.5))
+                    ),
+                    box(#ligne 3.2 existence densite
+                      id="graph_exi_dens",
+                      width=12,
+                      title="par rapport aux densité du bâti",
+                      solidHeader = TRUE,
+                      collapsible = TRUE,
+                      column(width=7,plotOutput("plot_exi_dens") %>% withSpinner(type=8, size=0.5)),
+                      column(width=5,plotOutput("plot_trans_dens") %>% withSpinner(type=8, size=0.5))
+                    )
                   )
                 )
                 
         ), #fin tabzone
-        #------------------------------- 4. A FAIRE ------------------
-        # 
-        # tabItem(tabName="poles",
-        #         fluidRow( # ---- ligne 1 : description ----
-        #                   box( #description
-        #                     id="info_poles",
-        #                     width=8,
-        #                     solidHeader = TRUE,
-        #                     HTML("Cet onglet permet d'explorer la distance des OH à des pôles urbains. <i> En cours de construction </i>.")
-        #                   ))
-        # ),
-        #------------------------------- 5. INFO ------------------
+         #------------------------------- 4. INFO ------------------
         
         tabItem(tabName="info",
                 fluidRow( 
                   column(8, source.info)
-                  # column (6, source.usage)
                 )
         )
       ) #fin tabinfo

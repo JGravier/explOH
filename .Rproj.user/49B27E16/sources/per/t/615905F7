@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1535398804107.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "9|51|33|0|\n35|48|59|0|\n62|50|87|0|\n89|47|114|0|\n",
+    "hash" : "3718052653",
+    "id" : "615905F7",
+    "lastKnownWriteTime" : 1552259832,
+    "last_content_update" : 1552259832769,
+    "path" : "D:/Sync/1recherche/1these/SIG/VISU/shiny/explOH_13/global_zones.R",
+    "project_path" : "global_zones.R",
+    "properties" : {
+        "cursorPosition" : "9,19",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

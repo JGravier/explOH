@@ -1,0 +1,164 @@
+/* fonts */
+
+/* #1 Regular Weight */
+@font-face {
+	font-family: "JosefinSansBold";
+	font-style: normal;
+	font-weight: normal;
+	src: url('JosefinSans-Bold.ttf') format('truetype');
+}
+
+
+
+/*couleurs generales*/
+
+a:link, a:visited {
+    color:#428bca;
+    text-decoration:none;
+}
+
+a:hover{
+	 color:#428bca;
+	text-decoration:underline;
+}
+
+.main-sidebar {
+    background-color: #5f6269;
+}
+
+.skin-black .sidebar-menu > li.active > a, .skin-black .sidebar-menu > li:hover > a {
+    color: #fff;
+    background: #1e5686;
+    border-left-color: #fff;
+}
+
+
+/*titres et signature*/
+.div_titre{
+  margin-top:8px;
+  
+}
+  
+ .titre{
+display:inline;
+font-family: 'JosefinSansBold', sans-serif;
+font-size: 20pt;
+margin-left: 20px;
+color: #222d32;
+}
+
+.stitre{
+display:inline;
+color: #222d32;
+margin-left: 10px;
+}
+
+
+.titre_info {
+	font-size:15pt;
+	font-weight: 700
+}
+
+.stitre_info{
+	color:#428bca;
+	display:inline;
+}
+ 
+.signature{
+	font-size:10pt;
+	text-align: right;
+	padding-right:20px;
+	line-height: 3;
+  }
+
+
+#temps_play {
+  text-align: left;
+}
+
+
+/*elements tab exploration*/
+
+
+/*style layer_control*/
+.leaflet-control-layers.leaflet-control-layers-expanded.leaflet-control{
+background: rgba(255,255,255,0.8);
+box-shadow: 0 0 15px rgba(0,0,0,0.2);
+font: 11px/9px Arial, Helvetica, sans-serif;
+color: #555;
+border: none;
+}
+
+label{
+font-weight:300;
+}
+
+
+
+.legend {
+ /* background-color: #111111;*/
+   font-size: 8pt;
+}
+
+#map{
+   margin-bottom: 20px;
+}
+
+.control-label{
+  font-weight : normal;
+}
+
+.btn-default{
+	color:#428bca;
+}
+.btn-1{
+  color:#e72535;
+}
+.btn-2{
+  color:#0a8eb1;
+}
+.btn-3{
+  color:#f6b01a;
+}
+.btn-4{
+  color:#2fc6a0;
+}
+.btn-5{
+  color:#703ab9;
+}
+.btn-6{
+  color:#ff7919;
+}
+
+.bootstrap-select.btn-group.show-tick .dropdown-menu li.selected a span.check-mark {
+  margin-top:-5px;
+}
+
+
+/* elements tab AFC */
+
+#afc {
+	background-color: #e6e9ed;
+}
+
+#cah {
+	background-color: #e6e9ed;
+}
+
+
+/* .box_interne .box {
+    border-bottom: 1px solid #d2d6de;
+    border-right: 1px solid #d2d6de;
+    border-left: 1px solid #d2d6de;
+}
+ */
+.plot_AFC {
+	background-color:#dedede;
+}
+
+.tab_contrib_AFC{
+	background-color:#dedede;
+	border-left: 2px solid white;
+	border-right: 2px solid white;
+}
+

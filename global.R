@@ -33,6 +33,8 @@ library(scatterD3)
 library(stringi)
 library(stringr)
 library(ade4)
+library(tibble)
+library(forcats)
 
 #Spatialobjects
 library(rgdal)
@@ -49,8 +51,10 @@ source("charge_data.R", local=FALSE)
 
 #ligne NA pour addCircles de LeafletProxy
 null_row <- OH_geom[st_geometry_type(OH_geom)=="POINT",][1,]
-null_row$OH_NUM <- 0
-
+# null_row[] <- NA
+# null_row$DATE_DEB <- -20000
+# null_row$DATE_FIN <- -20000
+# st_geometry(null_row) <- st_geometry(OH_geom[st_geometry_type(OH_geom)=="POINT",][1,])
 
 #----------------------------------- PALETTES ----
 ##VURB
@@ -85,7 +89,7 @@ texte_popup_OH <- function(df) {
         "</h5>Valeur d'usage : <b>" ,  df$V_USAGE,"</b> / ", df$NOM_USAGE,
         "<br/> Portée de niveau : <b>", df$PORTEE, "</b>",
         "<br/> Apparition en <b>", df$DATE_DEB, "</b> (f", df$FIAB_APP,
-        "), dispartion en <b>", df$DATE_FIN, "</b> (f", df$FIAB_DISP,")<br/><br/> Remarques : ",
+        "), disparition en <b>", df$DATE_FIN, "</b> (f", df$FIAB_DISP,")<br/><br/> Remarques : ",
         df$REMARQUES, "<br/> Ref : ", df$REFERENCE)
 }
 
@@ -143,15 +147,39 @@ theme_ln <- function()
 
 #----------------------------------- éléments HTML ---------
 
-source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p>L\'application explOH permet d\'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contextes (les "ensembles urbains", les "traits de rives", les "pôles urbains") provenant du <a href="http://citeres.univ-tours.fr/spip.php?article504", target="_blank">SIG Topographie de Tours PréIndustrielle </a> (ToToPI), développé au <a href="http://citeres.univ-tours.fr/spip.php?rubrique57", target="_blank">Laboratoire d\'Archéologie Urbaine</a> à Tours (UMR 7324 CITERES).</br> </br>
-                    L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse. Elle a pour objectif d\'accompagner la lecture des analyses statistiques et spatiales développées au cours de ce travail en permettant au lecteur/utilisateur de naviguer par lui-même dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique.</br></br>
-                    <p class="titre_info">Sources : </p>
-                    Données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS. </br>
-                    Fond de carte : OpenStreetMap, CartoDB')
+source.zones <- HTML('Cet onglet permet de caractériser la localisation des OH par rapport aux caractéristiques de l\'espace où elles apparaissent puis au cours de leur existence (type d\'occupation urbain/intermédiaire/non urbain et densités du bâti fort/moyen/faible). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2019 (en cours). 
+                  </br></br>
+                  Les zones d\'occupation du sol et de densité peuvent être affichées dans l\'onglet <a>exploration globale</a> (ensembles urbains sur la carte), et une schématisation de leur répartition au cours du temps est téléchargeable <a href="schematisations_zones_tours.pdf" target="_blank">ici</a>.
+                  ')
 
-source.usage <-HTML('<p class="titre_info">Utilisation de l\'application :</p>Sur la <p class="stitre_info">carte</p>, <img src="icone_leaflet.png", alt="l\'icône en haut à droite"> permet de choisir différents fonds de carte et d\'afficher ou non les données OH et les données contextuelles. </br> </br>
-                    Le panneau <p class="stitre_info">Années</p> permet choisir la période temporelle pour laquelles les OH sont afffichés, à partir du slider ou, pour un contrôle plus précis, en rentrant manuellement les dates minimum et maximum. Une seule année peut être sélectionnée en choisissant la même date pour les bornes  minimum et maximum. </br> </br>
-                    Le panneau <p class="stitre_info">Identification des OH</p>, qui apparaît après avoir cliqué sur le bouton "explorer", permet de retrouver un OH par son identifiant, de modifier l\'affichage des OH en fonction de leurs différents attributs, et d\'afficher seulement certains OH en fonction de leur attribut fonctionnel.')
+source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p>L\'application explOH permet d\'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contexte (les "ensembles urbains", les "traits de rives", ...) provenant du <a href="http://citeres.univ-tours.fr/spip.php?article504", target="_blank">SIG Topographie de Tours PréIndustrielle </a> (ToToPI), développé au <a href="http://citeres.univ-tours.fr/spip.php?rubrique57", target="_blank">Laboratoire d\'Archéologie Urbaine</a> à Tours (UMR 7324 CITERES).</br> </br>
+                    L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse (en cours). Elle a pour objectif d\'accompagner l\'analyse spatio-temporelle de la localisation des activités dans l\'espace urbain de Tours. Elle permet ainsi à l\'utilisateur de naviguer dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique (OH), et d\'afficher les résultats de divers traitements spatio-temporels de manière interactive.
+                    </br></br>
+                    
+                    <p class="titre_info">Utilisation : </p>
+                    
+                    <a><span class=\"fa fa-search\"></span> exploration globale : </a></br> 
+                    Dans cet onglet, les OH sont affichés sur la carte centrale en fonction d\'une <i>période</i> (outils en haut de la page) et de <i>caractéristiquesfonctionnelles ou temporelles</i> (outils à droite de la page) choisies par l\'utilisateur.</br>
+                    <b>Sélection temporelle :</b> une seule année peut être sélectionnée en choisissant la même date pour les bornes  minimum et maximum. </br>
+                    <b>Identification des OH  :</b> cet outil permet d\'identifier sur la carte un OH à partir de son identifiant unique.</br>
+                    <b>Tableau des OH selectionnés :</b>  cet outil affiche les attributs des OH sélectionnés sous forme de table attributaire (une partie de ces attributs est directement lisible individuellement en cliquant sur un OH sur la carte).</br>
+                    <b>Téléchargement :</b> la carte peut être enregistrée en format image (.png) à partir de  <img src=\"icone_dl.png\" alt=\"l\'icone de flèche\"> sur la carte. Les OH sélectionnés peuvent être téléchargé  à partir de l\'outil \"téléchargement\" sous différents formats.
+                    
+                    </br></br>
+                    <a><span class=\"fa fa-sort-amount-desc\"></span> analyse factorielle : </a></br> 
+                    Cet ongle affiche les résultats d\'une analyse multi-factorielle de la structure temporelle et fonctionnelle des données. Les résultats sont générés en fonction des variables sélectionnées par l\'utilisateur.
+                    
+                    </br></br>
+                    <a><span class=\"fa fa-square-o\"></span> analyse par zone : </a></br> 
+                    Cet ongle affiche les résultats d\'une analyse spatio-temporelle des caractéristiques de localisation des OH par rapport aux caractéristiques des zones où ils se situent. Les résultats sont générés en fonction du sous-ensemble d\'OH sélectionné par l\'utilisateur.
+                    
+                    </br></br>
+                    <p class=\"titre_info\">Sources : </p>
+                    Données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS. </br>
+                    Fond de carte : OpenStreetMap, CartoDB
+                    ')
+                    
+
 
 source.signature <- HTML(
   '<p class="signature">',

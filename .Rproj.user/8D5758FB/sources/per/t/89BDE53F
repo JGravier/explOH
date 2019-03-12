@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552296634116.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1011852700",
+    "id" : "89BDE53F",
+    "lastKnownWriteTime" : 1552301406,
+    "last_content_update" : 1552301406975,
+    "path" : "D:/lucie/Sync/1recherche/1these/SIG/VISU/shiny/explOH_13/charge_data.R",
+    "project_path" : "charge_data.R",
+    "properties" : {
+        "cursorPosition" : "27,42",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

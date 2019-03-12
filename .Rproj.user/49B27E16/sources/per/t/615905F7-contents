@@ -1,0 +1,117 @@
+################################
+# Shiny app pour afficher les objets selon le temps 
+# L. Nahassia, aout 2018
+# plots analyse zone
+################################
+facet_labels_occupation <- c("urbaine"="Zone \nd'occupation \nurbaine", "intermediaire"="Zone \nd'occupation \nintermédiaire", "non urbaine"="Zone \nd'occupation \nnon urbaine")
+facet_labels_dens <- c("3"="Zone de \ndensité \nforte (3)", "2"="Zone de \ndensité \nmoyenne (2)", "1"="Zone de \nfaible \ndensité (1)", "0"="Zone \nd'occupation \nnon urbaine")
+facet_labels_portee <- c("1"="1.Faible portée", "2"="2.Portée moyenne", "3"= "3.grande portée", "4"="4.Portée exceptionnelle")
+
+plot_occupation <- function(df, sous_titre, wrap) {
+  ggplot(df, aes(x=date_debut)) +
+    geom_bar(
+      stat="count",
+      width=6,
+      fill="grey10") +
+    geom_histogram( 
+      binwidth=100,
+      aes(alpha=0.7, fill=occupation)) +
+    facet_grid(
+      wrap,
+      labeller=labeller(occupation=facet_labels_occupation, PORTEE=facet_labels_portee))+
+    scale_x_continuous(breaks = c(1,seq(100,1900,100),2015))+
+    scale_fill_manual(values=c("urbaine"="#a05050", "intermediaire"="#c8ab37", "non urbaine"="darkgrey"))+
+    labs(title="Localisation des OH au moment de leur apparition par type d'occupation du sol",
+         subtitle=sous_titre,
+         x="année d'apparition",
+         y="nombre d'OH",
+         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+    theme_fivethirtyeight()+
+    theme_ln() +
+    theme(strip.text.y = element_text(size=10),
+          axis.text=element_text(size=9),
+          axis.text.x = element_text(angle=90, vjust=0.5, hjust=1))
+}
+
+plot_densite <- function(df, sous_titre, wrap) {
+  ggplot(df,aes(x=date_debut)) +
+    geom_bar(
+      stat="count",
+      width=6,
+      fill="grey10") +
+    geom_histogram( 
+      binwidth=100,
+      aes(alpha=0.4, fill=densite)) +
+    facet_grid(
+      wrap,
+      labeller=labeller(densite=facet_labels_dens, PORTEE=facet_labels_portee))+
+    scale_x_continuous(breaks = c(1,seq(100,1900,100),2015))+
+    scale_fill_manual(values=c("3"="#016957", "2"="#3ab29d", "1"="#aaddd4", "0"="darkgrey"))+
+    labs(title="Localisation des OH au moment de leur apparition par type de densité du bâti",
+         subtitle=sous_titre,
+         x="année d'apparition",
+         y="nombre d'OH",
+         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+    theme_fivethirtyeight()+
+    theme_ln() +
+    theme(strip.text.y = element_text(size=10),
+          axis.text=element_text(size=9),
+          axis.text.x = element_text(angle=90, vjust=0.5, hjust=1))
+}
+
+
+plot_part_occupation <- function(df, sous_titre) {
+    ggplot(df, aes(x=date_debut)) +
+    geom_histogram(
+      position="fill",
+      bins=20,
+      alpha=0.6,
+      aes( fill=occupation)) +
+    scale_fill_manual(values=c("urbaine"="#a05050", "intermediaire"="#c8ab37", "non urbaine"="darkgrey"),
+                      name="Apparition en zone d'occupation",
+                      labels=c("urbaine","intermédiaire", "non urbaine"))+
+    scale_x_continuous(breaks = c(1,seq(100,1900,100),2015))+
+    scale_y_continuous(labels=scales::percent)+
+    labs(title="Répartition des types de zones d'apparition des OH",
+         subtitle=sous_titre,
+         x="année",
+         y="part des apparitions dans \nchaque type d'occupation du sol",
+         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+    theme_fivethirtyeight()+
+    theme_ln() +
+    theme(
+      legend.position="bottom",
+      legend.direction = "vertical",
+      strip.text.y = element_text(size=10),
+      axis.text=element_text(size=9),
+      axis.text.x = element_text(angle=90, vjust=0.5, hjust=1))
+}
+
+plot_part_densite <- function(df, sous_titre) {
+  ggplot(df, aes(x=date_debut)) +
+    geom_histogram(
+      position="fill",
+      bins=20,
+      alpha=0.6,
+      aes( fill=densite)) +
+    scale_fill_manual(values=c("3"="#016957", "2"="#3ab29d", "1"="#aaddd4", "0"="darkgrey"),
+                      name="Apparition en zone de densité",
+                      labels=c("forte","moyenne", "faible","non urbaine"))+
+    scale_x_continuous(breaks = c(1,seq(100,1900,100),2015))+
+    scale_y_continuous(labels=scales::percent)+
+    labs(title="Répartition des types de zones d'apparition des OH",
+         subtitle=sous_titre,
+         x="année",
+         y="part des apparitions dans \nchaque type d'occupation du sol",
+         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+    theme_fivethirtyeight()+
+    theme_ln() +
+    theme(
+      legend.position="bottom",
+      legend.direction = "vertical",
+      strip.text.y = element_text(size=10),
+      axis.text=element_text(size=9),
+      axis.text.x = element_text(angle=90, vjust=0.5, hjust=1))
+}
+
+

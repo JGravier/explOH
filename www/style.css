@@ -78,6 +78,23 @@ margin-left: 10px;
 
 
 /*elements tab exploration*/
+
+
+/*style layer_control*/
+.leaflet-control-layers.leaflet-control-layers-expanded.leaflet-control{
+background: rgba(255,255,255,0.8);
+box-shadow: 0 0 15px rgba(0,0,0,0.2);
+font: 11px/9px Arial, Helvetica, sans-serif;
+color: #555;
+border: none;
+}
+
+label{
+font-weight:300;
+}
+
+
+
 .legend {
  /* background-color: #111111;*/
    font-size: 8pt;

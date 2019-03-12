@@ -1,7 +1,7 @@
 ################################
 # Shiny app pour afficher les objets selon le temps avec leaflet
-# mai 2018
-# Server pour explOH_11
+# L. Nahassia, aout 2018
+# Server
 ################################
 
 #####
@@ -172,17 +172,24 @@ shinyServer(function(input, output, session) {
     legende$val_legend <- as.factor(OH_geom$PORTEE_NOM)
     legende$title_legend <- "Niveau de portée des OH"}
     
-    else if (input$couleur_OH == "fiab") # afficher selon fiabilité
+    else if (input$couleur_OH == "fiab_a") # afficher selon fiabilité d'apparition
     { legende$alpha_polygones <- 0.9
-    legende$pal_couleurs <- palette_fiab
-    legende$pal_legend <- palette_fiab
+    legende$pal_couleurs <- palette_fiab_a
+    legende$pal_legend <- palette_fiab_a
     legende$val_legend <- as.factor(OH_geom$FIAB_APP)
     legende$title_legend <- "Fiabilité de la date d'apparition des OH"}
+    
+    else if (input$couleur_OH == "fiab_d") # afficher selon fiabilité de disparition
+    { legende$alpha_polygones <- 0.9
+    legende$pal_couleurs <- palette_fiab_d
+    legende$pal_legend <- palette_fiab_d
+    legende$val_legend <- as.factor(OH_geom$FIAB_DISP)
+    legende$title_legend <- "Fiabilité de la date de disparition des OH"}
     
     #Subset en cours d'affichage (OH_A) à redessiner
     OH_subset$tab_add <- OH_subset$OH_A
     
-
+    
     #changement de légende
     leafletProxy("map") %>%
       clearControls() %>%
@@ -209,10 +216,14 @@ shinyServer(function(input, output, session) {
     {  couleurs_pg <- ~legende$pal_couleurs(OH_pg$PORTEE_NOM)
     couleurs_pl<- ~legende$pal_couleurs(OH_pl$PORTEE_NOM)
     couleurs_pt <- ~legende$pal_couleurs(OH_pt$PORTEE_NOM)}
-    else if (input$couleur_OH == "fiab")
+    else if (input$couleur_OH == "fiab_a")
     {  couleurs_pg <- ~legende$pal_couleurs(OH_pg$FIAB_APP)
     couleurs_pl<- ~legende$pal_couleurs(OH_pl$FIAB_APP)
     couleurs_pt <- ~legende$pal_couleurs(OH_pt$FIAB_APP)}
+    else if (input$couleur_OH == "fiab_d")
+    {  couleurs_pg <- ~legende$pal_couleurs(OH_pg$FIAB_DISP)
+    couleurs_pl<- ~legende$pal_couleurs(OH_pl$FIAB_DISP)
+    couleurs_pt <- ~legende$pal_couleurs(OH_pt$FIAB_DISP)}
     
     #POPUP
     popup_ens_urb <- texte_popup_ens_urb(ens_urb_subset$tab)
@@ -221,11 +232,10 @@ shinyServer(function(input, output, session) {
     popup_pg <-texte_popup_OH(OH_pg)
     popup_pl <-texte_popup_OH(OH_pl)
     popup_pt <-texte_popup_OH(OH_pt)
-    # browser()
-    
+
     #date
     subset_dates <-  paste("Période : ", min(input$limites)," - " ,max(input$limites), sep="")
-
+    
     # CARTE
     leafletProxy("map", data=OH_pt) %>%
       clearMarkers() %>%
@@ -417,7 +427,7 @@ shinyServer(function(input, output, session) {
   
   
   ###########################################################################
-  ##################### ONGLET 2 : AFC ##############################
+  ##################### ONGLET 2 : AFC & CAH ##############################
   ###########################################################################
   
   #----------------------------------- #2.1.déclaration reactive objects----
@@ -425,44 +435,58 @@ shinyServer(function(input, output, session) {
   reacAFC <- reactiveValues(data=NULL, #resultat du dudi.coa
                             periodes = NULL, #découpage par période
                             variables = NULL, #variables fonctionnelle utilisée
-                            tab_biplot = NULL
+                            tab_biplot = NULL, #tableau pour le biplot
+                            dist_mat = NULL #matrice de distance khi-2 entre les lignes
                             
-                            )
+  )
+  reacCAH <- reactiveValues(data=NULL)
   ranges <- reactiveValues(x = NULL, y = NULL)
   
-  #----------------------------------- #2.2.INPUT > DONNEES : mise à jour du tableau de contingence----
-  observe({
+  #----------------------------------- #2.2.INPUT > DONNEES : mise à jour du tableau de contingence & calcul AFC ----
+  observe(priority = 11, {
     nom <- paste("tab",input$select_var,input$select_periodes, sep="_")
     tab_contingence$tab <- get(nom)
+    
+    # maj nombre de classes pour la CAH (= nombre de lignes)
+    classe_max <- nrow(tab_contingence$tab)
+    updatePickerInput(session,"nombre_classes",
+                      choices = seq(1,classe_max,1),
+                      selected="4")
+    
+    AFC <-dudi.coa(tab_contingence$tab, scannf=FALSE, nf=6)
+    reacAFC$data <- AFC
+    reacAFC$periodes <- input$select_periodes
+    reacAFC$variables <- input$select_var
+    reacAFC$dist_mat <- dist.dudi(AFC)
+    
+    
   })
   
   #----------------------------------- #2.3.INPUT > OUTPUT ----
   
-  # AFFICHAGE DU TABLEAU
-  observe({
+  #---- tableau de contingence----
+  observe(priority = 10, {
     output$tab_contingence <-renderDataTable(
       tab_contingence$tab,
       options=list(pageLength = 10, scrollX=TRUE, searching=FALSE)
     )
   })
   
-  # CALCUL DE L'AFC et maj des tableaux pour plot
-  observeEvent(input$action_AFC, {
+  #---- graphique, tableau variance des axes & choix des axes à ploter ----
+  observe(priority = 9, {
     
-    AFC <-dudi.coa(tab_contingence$tab, scannf=FALSE, nf=6)
-    
-    reacAFC$data <- AFC
-    reacAFC$periodes <- input$select_periodes
-    reacAFC$variables <- input$select_var
-
+    AFC <- reacAFC$data
     inertie_AFC <- summary.variance.dudi(AFC)
     
     #plot variance axes
     output$plot_inertie_axes <- renderPlot(
       barplot.dudi.variance(data=AFC, 
                             sumdata=inertie_AFC,
-                            titre=NULL)
-    )    
+                            titre=NULL))
+    output$tab_inertie_axes <- renderTable(inertie_AFC %>%  select(-CUTSCOLOR),  
+                                           striped=TRUE,
+                                           bordered=TRUE)
+
     
     #update de l'UI pour choix des axes à ploter
     updatePickerInput(session,"axe1",
@@ -473,77 +497,88 @@ shinyServer(function(input, output, session) {
                       selected="2")
   })
   
-  #PLOT AFC
-  observe({
+  #---- AFC : BIPLOT et TAB  contribution ----
+  observe(priority=8, {
     
     req(input$axe1, input$axe2)
     AFC <- reacAFC$data
     
-  #tableau pour biplot
+    #tableau pour biplot
     biplot_col <- setNames(AFC$co, names(AFC$li))
     biplot_col$type_var <- input$select_var
     biplot_col$taille <- 35
     biplot_li <- AFC$li
     biplot_li$type_var <- input$select_periodes
     biplot_li$taille <- 100
-    biplot_li$color_var <- "temps"
+    biplot_li$color_var <- "périodes"
+    biplot_li$nom_var <- "périodes"
+    
     
     #actualisation palettes, titre et liste_variable selon variables
     if (reacAFC$variables=="urb"){
       biplot_col$color_var <- str_sub(row.names(biplot_col), start=-1)
-      palette <- c("temps"="grey", "1"=couleurs_vurb[1], "2"=couleurs_vurb[2], "3"=couleurs_vurb[3], "4"=couleurs_vurb[4], "5"=couleurs_vurb[5],"6"=couleurs_vurb[6])
-      liste_var <- sort(unique(OH_geom$V_URB))
+      liste_var <- sort(unique(as.character(OH_geom$V_URB_NOM)))
+      biplot_col$nom_var <- liste_var
+      palette_biplot <- couleurs_vurb
+      names(palette_biplot) <- liste_var
       biplot_titre<- paste("Analyse factorielle des correspondances : valeurs urbaines * périodes de ", reacAFC$periodes, " ans", sep="")
     }
     else if (reacAFC$variables=="portee"){
       biplot_col$color_var <- str_sub(row.names(biplot_col), start=-1)
-      palette <- c("temps"="grey", "1"=couleurs_portees[1], "2"=couleurs_portees[2], "3"=couleurs_portees[3], "4"=couleurs_portees[4])
-      liste_var <- sort(unique(OH_geom$PORTEE))
+      liste_var <- sort(unique(as.character(OH_geom$PORTEE_NOM)))
+      biplot_col$nom_var <- liste_var
+      palette_biplot <- couleurs_portees
+      names(palette_biplot) <- liste_var
       biplot_titre <- paste("Analyse factorielle des correspondances : portées * périodes de ", reacAFC$periodes, " ans", sep="")
     }
     else if (reacAFC$variables=="usage"){
-      biplot_col$color_var <- str_sub(row.names(biplot_col), start=-2, end=-2)
-      palette <- c("temps"="grey", "1"=couleurs_vurb[1], "2"=couleurs_vurb[2], "3"=couleurs_vurb[3], "4"=couleurs_vurb[4], "5"=couleurs_vurb[5],"6"=couleurs_vurb[6])
-      liste_var <- sort(unique(OH_geom$V_URB))
+      biplot_col$color_var <- str_sub(row.names(biplot_col), start=-2)
+      biplot_col$nom_var <- liste_vusage
+      palette_biplot <- cut (biplot_col$color_var %>% as.numeric(),
+                      breaks=c(10,20,30,40,50,60,70),
+                      labels=c("#e72535", "#0a8eb1", "#f6b01a", "#2fc6a0", "#703ab9","#ff7919"),
+                      right=FALSE,
+                      include.lowest = TRUE) %>% as.character()
+      names(palette_biplot) <- liste_vusage
       biplot_titre <- paste("Analyse factorielle des correspondances : valeurs d'usage * périodes de ", reacAFC$periodes," ans", sep="")
     }
+    
+    
+    if(input$masquer_biplot=="aucune"){tab_biplot <- rbind(biplot_li, biplot_col)}
+    else if (input$masquer_biplot=="périodes"){tab_biplot <-biplot_col}
+    else if (input$masquer_biplot=="caractéristiques fonctionnelles"){tab_biplot <-biplot_li}
     
     #axes
     axe1 <- as.numeric(input$axe1)
     axe2 <- as.numeric(input$axe2)
     
-    #BIPLOT 
+    #variance expliquée 
     pctvar_A1 <- round(AFC$eig[axe1]*100/sum(AFC$eig))
     pctvar_A2 <- round(AFC$eig[axe2]*100/sum(AFC$eig))
     titre_axe1 <- paste("Axe n°", axe1, " (",pctvar_A1, "% de variance expliquée)", sep="")
     titre_axe2 <- paste("Axe n°", axe2, " (",pctvar_A2, "% de variance expliquée)", sep="")
-    
-    tab_biplot <- rbind(biplot_li, biplot_col)
-    
-   biplot <- 
-    scatterD3(x=tab_biplot[,axe1], y=tab_biplot[,axe2],
-              lab=row.names(tab_biplot),
-              col_var = tab_biplot$color_var,
-              colors=palette,
-              point_opacity = 0.8,
-              hover_opacity = 1,
-              hover_size = 2,
-              xlab=titre_axe1,
-              ylab=titre_axe2,
-              symbol_lab="variables en lignes et colonnes",
-              col_lab="type de variable",
-              transitions = TRUE,
-              caption =list(title=biplot_titre,
-                            subtitle ="L. Nahassia, Géographie-cité, 2018 | Sources : ToToPI, LAT, CITERES")
-              
-    )
-   
-   output$plot_biplot <- renderScatterD3(biplot)
 
+    #BIPLOT
+    biplot <- 
+      scatterD3(x=tab_biplot[,axe1], y=tab_biplot[,axe2],
+                lab=row.names(tab_biplot),
+                col_var = tab_biplot$nom_var,
+                colors=c("périodes"="grey", palette_biplot),
+                point_opacity = 0.8,
+                hover_opacity = 1,
+                hover_size = 2,
+                xlab=titre_axe1,
+                ylab=titre_axe2,
+                symbol_lab="variables en lignes et colonnes",
+                col_lab="type de variable",
+                transitions = FALSE,
+                fixed=TRUE,
+                caption =list(title=biplot_titre,
+                              subtitle ="L. Nahassia, Géographie-cité, 2018 | Sources : ToToPI, LAT, CITERES")
+                
+      )
+    output$plot_biplot <- renderScatterD3(biplot)
     
-    
-    
-
     # CONTRIBUTIONS
     contrib_AFC <- inertia.dudi(AFC, row.inertia = TRUE, col.inertia = TRUE)
     
@@ -552,30 +587,204 @@ shinyServer(function(input, output, session) {
       options=list(pageLength = 10, scrollX=TRUE, searching=FALSE)
     )
     
-    output$contrib_variabless <-renderDataTable(
+    output$contrib_variables <-renderDataTable(
       contrib_AFC$col.abs,
       options=list(pageLength = 10, scrollX=TRUE, searching=FALSE)
     )
-
-
-    # Entrée : data = resultat dudi.coa + sumdata = résultat summary.variance.dudi
-    # plot_AFC <- biplot.AFC(data=AFC,
-    #                        axe=list(input$axe1,input$axe2),
-    #                        variables_color=palette,
-    #                        liste_variables=liste_var,
-    #                        titre=paste("Coordonnées des variabless sur les axes",input$axe1,"et",input$axe2,sep=" "),
-    #                        soustitre=paste(input$select_periodes,"x", input$select_var, sep=" ")
-    # )
-    # 
-    # ouput$plot_biplot <- renderPlot(
-    #   plot_AFC
-    # )
-    # 
     
     
-  }) # fin observe AFC
+  }) # fin observe BIPLOT AFC
   
+  #---- CAH : dendrogramme & inertie ----
+  observe(priority=7, {
+    
+    req(reacAFC$data)
+    
+    #prépartion sous-titres titres plots
+    if (reacAFC$variables=="urb"){stitre<- paste("valeurs urbaines * périodes de ", reacAFC$periodes, " ans", sep="")}
+    else if (reacAFC$variables=="portee"){stitre <- paste("portées * périodes de ", reacAFC$periodes, " ans", sep="")}
+    else if (reacAFC$variables=="usage"){stitre <- paste("valeurs d'usage * périodes de ", reacAFC$periodes," ans", sep="")}
+    
+    #calcul CAH
+    CAH <- hclust(
+      reacAFC$dist_mat,
+      method= "ward.D2",
+      members=apply(tab_contingence$tab, MARGIN=1, FUN=sum)
+    )
+    reacCAH$data <- CAH
+    
+    # palette_dendro <- palette_CAH(4)
+    # browser()
+    # par(bg = "#EFEFEF")
+    # output$plot_dendro <- renderPlot(
+    #   A2Rplot(
+    #     x=CAH,
+    #     k = 4,
+    #     col.down = palette_dendro,
+    #     show.labels=TRUE,
+    #     main ="Dendrogramme de la CAH"
+    #   )
+    # )
+    
+    #dendrogramme
+    output$plot_dendro <- renderPlot(
+
+      ggdendrogram2(CAH)+
+        labs(
+          title="Dendrogramme de la CAH",
+          subtitle=stitre,
+          caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES",
+          x="périodes",
+          y="indice de similarité")+
+        theme_fivethirtyeight()+
+        theme_ln()+
+        theme(
+          axis.text=element_text(angle = 90, size=8.5, hjust=1, vjust=0.5),
+          panel.grid.major.x=element_blank(),
+          panel.border = element_blank())
+
+    )
+    
+    #inertie découpage
+    inertie_CAH <- sort(CAH$height, decreasing = TRUE)
+    inertie_CAH <- inertie_CAH/sum(inertie_CAH)*100
+    #gestion longueur graphique
+    if (length(inertie_CAH)>40) {
+      nb_coupes <- 40
+      tab <- inertie_CAH[1:40]
+      soustitre <- paste("pour les 40 premiers noeuds du dendrogramme",stitre, sep="\n")} 
+    else {
+      nb_coupes <-length(inertie_CAH)
+      tab <- inertie_CAH
+      soustitre <- "pour tous les noeuds du dendrogramme"} 
+    
+    #plot inertie
+    output$plot_in_cah <- renderPlot(
+      
+      ggplot()+
+        geom_bar(
+          aes(x=c(1:nb_coupes),y=tab),
+          stat="identity",
+          fill="#DD4B39",
+          alpha=0.7)+
+        labs(
+          title="Part de l'inertie des différentes coupes de la CAH",
+          subtitle= soustitre,
+          caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES",
+          x="nombre de classes",
+          y="Part de l'inertie totale (%)")+
+        scale_x_continuous(breaks=c(1:length(tab)), expand=c(0.01, 0.01))+
+        theme_fivethirtyeight()+
+        theme_ln()
+    )
+    
+  })#fin observe dendrogramme
   
+  #---- CAH caractérisation des classes ----
+  
+  observe(priority=6, {
+    req(input$nombre_classes, reacAFC, reacCAH)
+    CAH <- reacCAH$data
+    
+    
+    #préparation sous-titres plots
+    if (reacAFC$variables=="urb"){stitre<- paste("valeurs urbaines * périodes de ", reacAFC$periodes, " ans", sep="")}
+    else if (reacAFC$variables=="portee"){stitre <- paste("portées * périodes de ", reacAFC$periodes, " ans", sep="")}
+    else if (reacAFC$variables=="usage"){stitre <- paste("valeurs d'usage * périodes de ", reacAFC$periodes," ans", sep="")}
+    
+    #tableaux classes et limites de classes
+    nombre_classes <- input$nombre_classes
+    flip <- classes.periodes.cah(CAH=CAH, nb=nombre_classes)
+    classes_periodes <- flip$entier
+    dates_axe <- flip$axe
+    
+    #frise chronologique avec classes
+    output$frise_classes <- renderPlot(
+      
+      ggplot(classes_periodes) +
+        geom_segment(aes(x=deb, xend=fin, y=0., yend=0., color=classes) , linetype=1, size=6) +
+        scale_color_manual(values=palette_CAH(nombre_classes))+
+        scale_x_continuous(breaks=c(dates_axe$deb,2016))+
+        labs(colour=paste("classes de la CAH",stitre,sep="\n"))+
+        theme_bw() + 
+        theme(panel.grid.minor = element_blank(), 
+              panel.grid.major =  element_blank(),
+              panel.border = element_blank(),
+              text = element_text(colour="grey40"),
+              axis.text.x = element_text(size=11, angle=90, vjust =0.6, hjust=1, colour="grey40"),
+              axis.title.x=element_blank(),
+              axis.title.y=element_blank(),
+              axis.text.y=element_blank(),  
+              axis.ticks.y=element_blank(),
+              aspect.ratio =0.02,
+              legend.position="top",
+              legend.direction = "horizontal",
+              legend.title= element_text(size=12, hjust=1)
+        )+
+        guides(colour=guide_legend(nrow=1))
+    )
+    
+    #choix tableau de contigence avec périodes -> caractérisation en valeurs urbaines et portées
+    nom1 <- paste("tab_urb",input$select_periodes, sep="_")
+    tab_cont_vurb <- get(nom1)
+    nom2 <- paste("tab_portee",input$select_periodes, sep="_")
+    tab_cont_portee <- get(nom2)
+    #tab indépendance mis en forme pour plot
+    #format long
+    tab_ind <- indep.classes.cah(tab_cont_vurb = tab_cont_vurb,
+                                 tab_cont_portee = tab_cont_portee,
+                                 CAH = CAH,
+                                 nb=nombre_classes) %>% gather(key=Fonction, value="data", v_urb.1 : portee.4)
+    #transparence
+    tab_ind$transparence <- 0
+    tab_ind[grepl("p",tab_ind$Fonction),]$transparence <- 1
+    
+    # graphiques des caractéristiques des classes
+    output$plot_classes <- renderPlot(
+      
+        ggplot(tab_ind) +
+        geom_bar(aes(x=Fonction, y=data, fill=Cluster, color=Cluster, alpha=transparence), stat= "identity")+
+        facet_wrap(~Cluster)+
+        scale_fill_manual(values=palette_CAH(nombre_classes))+
+        scale_color_manual(values=palette_CAH(nombre_classes))+
+        scale_alpha(range=c(1,0.4))+
+        coord_flip()+
+        labs(
+          x = "Moyenne des écarts standardisés par classe (résidus de Pearson)",
+          y="Valeurs urbaines",
+          title= "Caractérisation des périodes urbaines par type de fonctions",
+          subtitle="Classe de périodes: CAH (distance khi2)",
+          caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+        theme_fivethirtyeight()+
+        theme_ln()
+      
+    )
+    
+  })
+  
+  ###########################################################################
+  ##################### ONGLET 3 : ZONES ##############################
+  ###########################################################################
+  
+  observe(priority = 12, {
+    
+    val_usage <- lapply(
+      1:6, 
+      function(i){
+        substring(
+          eval(parse(text=paste("input$picker_zones_",i,sep=""))), #récupère toutes les options cochées
+          1,2 #ne garde que les deux premiers caractères (=les numéros)
+        )
+      }) %>% unlist %>% as.numeric
+    
+    tab <- OH_zones %>% filter(V_USAGE %in% val_usage)
+    stitre <- paste("OH de valeur d'usage :", paste(val_usage, sep = '', collapse = ', '))
+    
+    output$plot_occupation <- renderPlot(plot_occupation_portees(tab,stitre))
+    output$plot_densite <- renderPlot(plot_densite_portees(tab,stitre))
+    
+    
+  })
   
   
 }) # fin du serveur

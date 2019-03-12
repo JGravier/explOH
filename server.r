@@ -23,19 +23,19 @@ shinyServer(function(input, output, session) {
     
     leaflet() %>%
       setView(lat=47.394211, lng=0.687247, zoom = 15) %>%
-      
-      ##tiless
+      ##tiles
       addProviderTiles("CartoDB.Positron", group="clair") %>%
-      addProviderTiles("Esri.WorldImagery", group = "satellite") %>%
       addTiles(options = tileOptions(opacity =0), attribution=" données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS", group=c("clair", "satellite")) %>% 
       ##échelle
       addScaleBar(position="bottomright", scaleBarOptions(imperial=FALSE)) %>% 
       
       ##layer control
       addLayersControl(
-        baseGroups = c("clair", "satellite"),
         overlayGroups = c("géometries des OH", "ensembles urbains occupation", "ensembles urbains densité","traits de rive", "pôles urbains"),
-        options=layersControlOptions(autoZIndex=TRUE)) %>%
+        position="bottomleft",
+        options=layersControlOptions(autoZIndex=TRUE, 
+                                     collapsed=FALSE)
+        ) %>%
       hideGroup(c("traits de rive","ensembles urbains occupation", "ensembles urbains densité", "pôles urbains")) %>%    
       
       #légende
@@ -47,7 +47,7 @@ shinyServer(function(input, output, session) {
       
       #bouton mesure
       addMeasure(
-        position = "bottomright",
+        position = "topleft",
         primaryLengthUnit = "meters",
         secondaryLengthUnit = "kilometers",
         primaryAreaUnit = "sqmeters",
@@ -109,7 +109,6 @@ shinyServer(function(input, output, session) {
     req(input$borne_temps_1, input$borne_temps_2)
     updateSliderInput(session = session,
                       inputId = "limites",
-                      # value=c(subset_limites_temps$date_min,subset_limites_temps$date_max)
                       value=c(input$borne_temps_1,input$borne_temps_2))
   })
   
@@ -213,7 +212,7 @@ shinyServer(function(input, output, session) {
     OH_add <- OH_subset$tab_add    
     OH_pt <- OH_add[st_geometry_type(OH_add)=="POINT",] %>% st_cast("POINT")
     #ajout d'un OH dummy à OH_pt pour contourner le bug de leafletProxy avec df vide (OH généré dans global)
-    OH_pt <- rbind(OH_pt, null_row)
+    # OH_pt <- rbind(OH_pt, null_row)
     OH_pg <- OH_add[st_geometry_type(OH_add)=="MULTIPOLYGON",] %>% st_cast("MULTIPOLYGON")
     OH_pl <- OH_add[st_geometry_type(OH_add)=="MULTILINESTRING",] %>% st_cast("MULTILINESTRING")
     
@@ -242,7 +241,7 @@ shinyServer(function(input, output, session) {
     popup_pg <-texte_popup_OH(OH_pg)
     popup_pl <-texte_popup_OH(OH_pl)
     popup_pt <-texte_popup_OH(OH_pt)
-
+    
     #date
     subset_dates <-  paste("Période : ", min(input$limites)," - " ,max(input$limites), sep="")
     
@@ -252,8 +251,8 @@ shinyServer(function(input, output, session) {
       clearGroup(group=c("ensembles urbains occupation", "ensembles urbains densité", "traits de rive", "poles urbains")) %>%
       removeControl(layerId = c("nombre","periode")) %>% 
       #nombre d'OH
-      addControl(position="bottomleft", html=OH_subset$message, layerId = "nombre") %>% 
-      addControl(position="bottomleft", html=subset_dates, layerId = "periode") %>%
+      addControl(position="topright", html=OH_subset$message, layerId = "nombre") %>% 
+      addControl(position="topright", html=subset_dates, layerId = "periode") %>%
       #contexte
       addPolygons(data=ens_urb_subset$tab,
                   group="ensembles urbains occupation",
@@ -269,7 +268,7 @@ shinyServer(function(input, output, session) {
                   popup=popup_ens_urb) %>%
       addPolylines(data=traits_rive_subset$tab,
                    group="traits de rive",
-                   color="blue",#pointillés ?
+                   color="#2260aa",#pointillés ?
                    weight=3,
                    dashArray ="5,5",
                    fillOpacity = 0.9,
@@ -312,7 +311,7 @@ shinyServer(function(input, output, session) {
   
   #TAB OUTPUT
   observe({
-    tabOH <- OH_subset$OH_A %>% as.data.frame %>% select(-geom_wkt, -geometry, -QGIS_ID, -V_URB, - V_URB_NOM, -PORTEE_NOM )
+    tabOH <- OH_subset$OH_A %>% as.data.frame %>% select(-geom, -V_URB, - V_URB_NOM, -PORTEE_NOM )
     output$tab_OH <-renderDataTable(
       tabOH,
       filter="bottom",
@@ -353,13 +352,54 @@ shinyServer(function(input, output, session) {
   })
   #----------------------------------- #1.6. INTERACTIONS AUTRES ----
   
+  #mise en valeur des OH qui apparaissent/disparaissent pendant la période
+  observe({
+    
+    surl <- input$date_OH
+    date_min <- min(input$limites)
+    date_max <- max(input$limites)
+    
+    if(surl =="date_deb"){ 
+      OH_sur <- OH_subset$OH_A %>% filter(DATE_DEB>=date_min & DATE_DEB>=date_min)
+      col <- "#224f77"
+    }else if(surl =="date_fin"){
+      OH_sur <- OH_subset$OH_A %>% filter(DATE_FIN>=date_min & DATE_FIN>=date_min)
+      col <- "#770924"
+    }else if (surl =="sur_off"){
+      OH_sur <- null_row
+    }
+    
+    OH_pt <- OH_sur[st_geometry_type(OH_sur)=="POINT",] %>% st_cast("POINT")
+    #ajout d'un OH dummy à OH_pt pour contourner le bug de leafletProxy avec df vide (OH généré dans global)
+    # OH_pt <- rbind(OH_pt, null_row)
+    OH_pg <- OH_sur[st_geometry_type(OH_sur)=="MULTIPOLYGON",] %>% st_cast("MULTIPOLYGON")
+    OH_pl <- OH_sur[st_geometry_type(OH_sur)=="MULTILINESTRING",] %>% st_cast("MULTILINESTRING")
+    
+    leafletProxy("map", data=OH_pt) %>%
+      clearGroup("surlignés")%>% 
+      addPolygons(data=OH_pg,
+                  stroke = TRUE,
+                  fill=FALSE,
+                  weight=2,
+                  color=col,
+                  group="surlignés") %>%
+      addCircles(        radius=10, #data passée en argument du leaflet général pour contourner erreur
+                         color=col,
+                         weight = 2,
+                         stroke = TRUE,
+                         fill=FALSE,
+                         group="surlignés") %>%
+      addPolylines(data=OH_pl,
+                   weight=2,
+                   color=col,
+                   opacity= 0.7,
+                   group="surlignés")
+    
+  })
+  
+  
   # mise en valeur de l'OH sélectionnée, même si elle est hors de ce qui est affiché
   observeEvent(input$selec_OH_search, {
-    
-    #*******
-    #A FAIRE
-    # voir si zoom sur bouding box (pbm avec les points et les petits polygones)
-    #*******
     
     ## selection selon le type de géométrie
     # leafletProxy("map") %>% clearGroup("selection")
@@ -379,7 +419,7 @@ shinyServer(function(input, output, session) {
         setView(lat=this.y, lng=this.x, zoom = 18) %>%
         addPolygons(data=this.OH_geom,
                     stroke = TRUE,
-                    color= "black",
+                    color= "yellow",
                     opacity= 0.7,
                     weight= 5,
                     fill = FALSE,
@@ -401,7 +441,7 @@ shinyServer(function(input, output, session) {
           setView(lat=this.y, lng=this.x, zoom = 18) %>%
           addPolylines(data=this.OH_geom,
                        weight=4,
-                       color="black",
+                       color="yellow",
                        group="selection",
                        popup=this.popup)
       }
@@ -420,7 +460,7 @@ shinyServer(function(input, output, session) {
           addCircles(data=this.OH_geom,
                      radius=10,
                      stroke = TRUE,
-                     color= "black",
+                     color= "yellow",
                      opacity= 0.7,
                      weight= 5,
                      fill = FALSE,
@@ -502,7 +542,7 @@ shinyServer(function(input, output, session) {
     output$tab_inertie_axes <- renderTable(inertie_AFC %>%  select(-CUTSCOLOR),  
                                            striped=TRUE,
                                            bordered=TRUE)
-
+    
     
     #update de l'UI pour choix des axes à ploter
     updatePickerInput(session,"axe1",
@@ -551,10 +591,10 @@ shinyServer(function(input, output, session) {
       biplot_col$color_var <- str_sub(row.names(biplot_col), start=-2)
       biplot_col$nom_var <- liste_vusage
       palette_biplot <- cut (biplot_col$color_var %>% as.numeric(),
-                      breaks=c(10,20,30,40,50,60,70),
-                      labels=c("#e72535", "#0a8eb1", "#f6b01a", "#2fc6a0", "#703ab9","#ff7919"),
-                      right=FALSE,
-                      include.lowest = TRUE) %>% as.character()
+                             breaks=c(10,20,30,40,50,60,70),
+                             labels=c("#e72535", "#0a8eb1", "#f6b01a", "#2fc6a0", "#703ab9","#ff7919"),
+                             right=FALSE,
+                             include.lowest = TRUE) %>% as.character()
       names(palette_biplot) <- liste_vusage
       biplot_titre <- paste("Analyse factorielle des correspondances : valeurs d'usage * périodes de ", reacAFC$periodes," ans", sep="")
     }
@@ -573,7 +613,7 @@ shinyServer(function(input, output, session) {
     pctvar_A2 <- round(AFC$eig[axe2]*100/sum(AFC$eig))
     titre_axe1 <- paste("Axe n°", axe1, " (",pctvar_A1, "% de variance expliquée)", sep="")
     titre_axe2 <- paste("Axe n°", axe2, " (",pctvar_A2, "% de variance expliquée)", sep="")
-
+    
     #BIPLOT
     biplot <- 
       scatterD3(x=tab_biplot[,axe1], y=tab_biplot[,axe2],
@@ -644,7 +684,7 @@ shinyServer(function(input, output, session) {
     
     #dendrogramme
     output$plot_dendro <- renderPlot(
-
+      
       ggdendrogram2(CAH)+
         labs(
           title="Dendrogramme de la CAH",
@@ -658,7 +698,7 @@ shinyServer(function(input, output, session) {
           axis.text=element_text(angle = 90, size=8.5, hjust=1, vjust=0.5),
           panel.grid.major.x=element_blank(),
           panel.border = element_blank())
-
+      
     )
     
     #inertie découpage
@@ -758,7 +798,7 @@ shinyServer(function(input, output, session) {
     # graphiques des caractéristiques des classes
     output$plot_classes <- renderPlot(
       
-        ggplot(tab_ind) +
+      ggplot(tab_ind) +
         geom_bar(aes(x=Fonction, y=data, fill=Cluster, color=Cluster, alpha=transparence), stat= "identity")+
         facet_wrap(~Cluster)+
         scale_fill_manual(values=palette_CAH(nombre_classes))+
@@ -778,9 +818,9 @@ shinyServer(function(input, output, session) {
     
   })
   
-  ###########################################################################
+  #####################################################################
   ##################### ONGLET 3 : ZONES ##############################
-  ###########################################################################
+  #####################################################################
   
   observe({
     #tableau
@@ -792,22 +832,34 @@ shinyServer(function(input, output, session) {
           1,2 #ne garde que les deux premiers caractères (=les numéros)
         )
       }) %>% unlist %>% as.numeric
-    tab <- OH_zones %>% filter(V_USAGE %in% val_usage)
+    tab <- OH_over_app %>% filter(V_USAGE %in% val_usage)
+    tab2 <- exi_ordre %>% filter(V_USAGE %in% val_usage)
+    tab3 <- exi_transitions %>% filter(V_USAGE %in% val_usage)
     #sous-titre
     if (!isTruthy(input$stitre_plot_zones)){
-    stitre <- paste("OH de valeur d'usage :", paste(val_usage, sep = '', collapse = ', '))
+      stitre <- paste("OH de valeur d'usage :", paste(val_usage, sep = '', collapse = ', '))
     } else (stitre <- input$stitre_plot_zones)
     #facettes par portées ou non
     if(input$portee_plot_zones){
-      wrap1 <- "deb_urb2~PORTEE"
-      wrap2<- "deb_densite~PORTEE"
+      wrap1 <- "occupation~PORTEE"
+      wrap2<- "densite~PORTEE"
     } else {
-      wrap1 <- "deb_urb2~."
-      wrap2 <- "deb_densite~."
+      wrap1 <- "occupation~."
+      wrap2 <- "densite~."
     }
     
-    output$plot_occupation <- renderPlot(plot_occupation_portees(tab,stitre,wrap1))
-    output$plot_densite <- renderPlot(plot_densite_portees(tab,stitre,wrap2))
+    #plots apparrition
+    output$plot_occupation <- renderPlot(plot_occupation(tab,stitre,wrap1))
+    output$plot_part_occupation <- renderPlot(plot_part_occupation(tab,stitre))
+    output$plot_densite <- renderPlot(plot_densite(tab,stitre,wrap2))
+    output$plot_part_densite <- renderPlot(plot_part_densite(tab,stitre))
+    
+    #plots existence
+    output$plot_exi_occ <- renderPlot(plot_exi_occupation(tab2,stitre))
+    output$plot_trans_occ <- renderPlot(plot_transitions(tab3,"occupation",stitre))
+    output$plot_exi_dens <- renderPlot(plot_exi_densite(tab2,stitre))
+    output$plot_trans_dens <- renderPlot(plot_transitions(tab3,"densite",stitre))
+    
     
     
   })

@@ -133,7 +133,7 @@ indep.classes.cah <- function(tab_cont_vurb, tab_cont_portee, CAH, nb){
     # Fonction pour abtenir les écarts standardisés
   TabEcartPearsonResidus <- function(x){
     x <- as.matrix(x)
-    x <- chisq.test(x)
+    x <- suppressWarnings(chisq.test(x))
     x <- x$residuals 
     as.data.frame(x)
   }
@@ -141,10 +141,10 @@ indep.classes.cah <- function(tab_cont_vurb, tab_cont_portee, CAH, nb){
   typochrono <- cutree(CAH, k=nb) 
   #caracterisation par valeur d'usage
   ecarts_vurb <- tab_cont_vurb %>% TabEcartPearsonResidus() %>%  mutate(Cluster = factor(typochrono, levels = 1:nb))
-  ecarts_norm_vurb  <- ecarts_vurb %>% group_by(Cluster) %>% summarise_all(funs(mean))
+  ecarts_norm_vurb  <- ecarts_vurb %>% group_by(Cluster) %>% summarise_all(list(mean))
   #caracterisation par portée
   ecarts_portee <- tab_cont_portee %>% TabEcartPearsonResidus() %>%  mutate(Cluster = factor(typochrono, levels = 1:nb))
-  ecarts_norm_portee  <- ecarts_portee %>% group_by(Cluster) %>% summarise_all(funs(mean))
+  ecarts_norm_portee  <- ecarts_portee %>% group_by(Cluster) %>% summarise_all(list(mean))
   #les deux groupés en 1 tableau
   tab_ecarts <- cbind(ecarts_norm_vurb,ecarts_norm_portee %>% select(-Cluster))
 
