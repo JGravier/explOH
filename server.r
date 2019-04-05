@@ -360,10 +360,10 @@ shinyServer(function(input, output, session) {
     date_max <- max(input$limites)
     
     if(surl =="date_deb"){ 
-      OH_sur <- OH_subset$OH_A %>% filter(DATE_DEB>=date_min & DATE_DEB>=date_min)
+      OH_sur <- OH_subset$OH_A %>% filter(DATE_DEB>=date_min & DATE_DEB<=date_max)
       col <- "#224f77"
     }else if(surl =="date_fin"){
-      OH_sur <- OH_subset$OH_A %>% filter(DATE_FIN>=date_min & DATE_FIN>=date_min)
+      OH_sur <- OH_subset$OH_A %>% filter(DATE_FIN>=date_min & DATE_FIN<=date_max)
       col <- "#770924"
     }else if (surl =="sur_off"){
       OH_sur <- null_row

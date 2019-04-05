@@ -23,7 +23,8 @@ shinyUI(
       sidebarMenu(
         menuItem("exploration globale", tabName="explo_carte", icon = icon("search")),
         menuItem("analyse factorielle", tabName="afc", icon=icon("sort-amount-desc")),
-        menuItem("analyse par zone", tabName="zones", icon=icon("square-o")),
+        menuItem("analyse par zone", tabName="zones", icon=icon("th-large")),
+        menuItem("analyse voisinage", tabName="voisins", icon=icon("stop-circle")),
         menuItem("informations", tabName ="info", icon=icon("info"))
       )
     ),
@@ -112,24 +113,22 @@ shinyUI(
                     br(),
                     #affichage selon date début et date fin
                     tags$span("surligner les OH :"),
-                    awesomeRadio("date_OH", label =NULL,
+                    prettyRadioButtons("date_OH", label =NULL,
                                  choices = list("aucune"="sur_off",
                                                 "qui apparaissent pendant la période" = "date_deb", 
                                                 "qui disparaissent pendant la période" = "date_fin"
                                  ), 
-                                 selected = "sur_off",
-                                 inline = FALSE),
+                                 selected = "sur_off"),
                     br(),
                     # couleurs selon fonction, portée ou durée d'existance
                     tags$span("différenciation des OH selon leur :"),
-                    awesomeRadio("couleur_OH", label =NULL,
+                    prettyRadioButtons("couleur_OH", label =NULL,
                                  choices = list("valeur urbaine" = "v_urb", 
                                                 "portée" = "portee",
                                                 "fiabilité d'apparition"="fiab_a",
                                                 "fiabilité de disparition"="fiab_d"
                                  ), 
-                                 selected = "v_urb",
-                                 inline = FALSE)
+                                 selected = "v_urb")
                   )#fin affichage
                   
                 ), #fin fluidrow carte, affichage
@@ -501,8 +500,39 @@ shinyUI(
                 )
                 
         ), #fin tabzone
-         #------------------------------- 4. INFO ------------------
-        
+         #------------------------------- 4. VOISINAGE ------------------
+        tabItem(tabName="voisins",
+                fluidRow(
+                  box(#---- ligne 1 : infos ---
+                    id="info_voisins",
+                    width=12,
+                    solidHeader = TRUE,
+                    tags$span("Cet onglet permet d'analyser les voisinages des OH qui apparaissent à une date donnée.")
+
+                  )
+                ),
+                fluidRow(#---- ligne 2 : années ----
+                         box ( 
+                           id="temps_voisins",
+                           width=12,
+                           height = 128,
+                           sliderInput("annee_voisin", label="",
+                                       min=-25, max=2015, value=50, round = 1, step=1, sep=" ")
+                         )
+                ),#fin fluidRow année
+                fluidRow(#---- ligne 3 : plots résultats ----
+                         box ( 
+                           id="ref",
+                           width=4
+                         ),
+                         box ( 
+                           id="voisinage",
+                           width=8
+                         )
+                )#fin fluidRow année
+                
+        ),
+        #------------------------------- 5. INFO ------------------
         tabItem(tabName="info",
                 fluidRow( 
                   column(8, source.info)

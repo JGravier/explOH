@@ -36,8 +36,6 @@ exi_transitions <- OH_over_exi %>% #tableau des transitions
   select(date_transition, occupation, lead_occ, trans_occ, densite, lead_dens, trans_dens,OH_NUM, V_USAGE, V_URB, PORTEE)
 
 
-
-
 #-----------------------------------  2. Objets historiques ----
 
 #geometries riches
