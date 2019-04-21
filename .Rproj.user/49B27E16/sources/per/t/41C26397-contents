@@ -109,6 +109,12 @@ texte_popup_traits_rive <- function(df) {
         "<h5> <b> Trait de rive ", df$SELEC, "</b> </h5>(", df$DEBUT,"-",df$FIN,")")
 }
 
+texte_popup_poles <- function(df) {
+  paste(sep="",
+        "<h5> <b> Pole urbain ", df$type, " </h5>", df$date_deb,"-",df$date_fin)
+}
+
+
 #----------------------------------- ICONES POLES ----
 polesIcons <- iconList(
   economique = makeIcon(iconUrl="icone_eco.png"),

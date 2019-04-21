@@ -25,18 +25,25 @@ shinyServer(function(input, output, session) {
       setView(lat=47.394211, lng=0.687247, zoom = 15) %>%
       ##tiles
       addProviderTiles("CartoDB.Positron", group="clair") %>%
-      addTiles(options = tileOptions(opacity =0), attribution=" données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS") %>% 
+      addTiles(options = tileOptions(opacity =0), attribution=" données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS", group=c("clair", "satellite")) %>% 
       ##échelle
       addScaleBar(position="bottomright", scaleBarOptions(imperial=FALSE)) %>% 
       
       ##layer control
       addLayersControl(
-        overlayGroups = c("géometries des OH", "ensembles urbains occupation", "ensembles urbains densité","traits de rive"),
+        overlayGroups = c("géometries des OH", "ensembles urbains occupation", "ensembles urbains densité","traits de rive", "pôles urbains"),
         position="bottomleft",
         options=layersControlOptions(autoZIndex=TRUE, 
                                      collapsed=FALSE)
         ) %>%
-      hideGroup(c("traits de rive","ensembles urbains occupation", "ensembles urbains densité")) %>%    
+      hideGroup(c("traits de rive","ensembles urbains occupation", "ensembles urbains densité", "pôles urbains")) %>%    
+      
+      #légende
+      addLegend(position="bottomleft", 
+                title = "Valeurs urbaines des OH", 
+                pal =  palette_fonctions, 
+                values = OH_geom$V_URB_NOM, 
+                opacity = 1) %>% 
       
       #bouton mesure
       addMeasure(
@@ -80,6 +87,7 @@ shinyServer(function(input, output, session) {
   #contexte
   ens_urb_subset <- reactiveValues(tab = ens_urb)
   traits_rive_subset <- reactiveValues(tab = traits_rive)
+  poles_subset <- reactiveValues(tab=poles)
   #couleurs
   legende <- reactiveValues(
     alpha_polygones = NA,
@@ -112,7 +120,8 @@ shinyServer(function(input, output, session) {
     req(max(input$limites), min(input$limites))
     ens_urb_subset$tab <- ens_urb %>% filter (date_debut<=max(input$limites) & date_fin>=min(input$limites))
     traits_rive_subset$tab <- traits_rive %>% filter (DEBUT<=max(input$limites) & FIN>=min(input$limites))
-
+    poles_subset$tab <- poles %>% filter (date_deb<=max(input$limites) & date_fin>=min(input$limites))
+    
   })
   
   ##Objets Historiques (temps, fonctions)
@@ -157,8 +166,7 @@ shinyServer(function(input, output, session) {
   ## quand l'utilisateur choisi de modifier le type de legende
   ## > modification des couleurs et des valeurs pour construire la légende
   ## > réinitialisation des OH à afficher
-  observe ({
-    
+  observeEvent (input$couleur_OH, {
     if (input$couleur_OH == "v_urb") # afficher selon valeurs urbaines
     { legende$alpha_polygones <- 0.7 
     legende$pal_couleurs <- palette_fonctions
@@ -229,6 +237,7 @@ shinyServer(function(input, output, session) {
     #POPUP
     popup_ens_urb <- texte_popup_ens_urb(ens_urb_subset$tab)
     popup_traits_rive <- texte_popup_traits_rive(traits_rive_subset$tab)
+    popup_poles <- texte_popup_poles(poles_subset$tab)
     popup_pg <-texte_popup_OH(OH_pg)
     popup_pl <-texte_popup_OH(OH_pl)
     popup_pt <-texte_popup_OH(OH_pt)
@@ -239,7 +248,7 @@ shinyServer(function(input, output, session) {
     # CARTE
     leafletProxy("map", data=OH_pt) %>%
       clearMarkers() %>%
-      clearGroup(group=c("ensembles urbains occupation", "ensembles urbains densité", "traits de rive")) %>%
+      clearGroup(group=c("ensembles urbains occupation", "ensembles urbains densité", "traits de rive", "poles urbains")) %>%
       removeControl(layerId = c("nombre","periode")) %>% 
       #nombre d'OH
       addControl(position="topright", html=OH_subset$message, layerId = "nombre") %>% 
@@ -264,6 +273,10 @@ shinyServer(function(input, output, session) {
                    dashArray ="5,5",
                    fillOpacity = 0.9,
                    popup=popup_traits_rive) %>%
+      addMarkers(data=poles_subset$tab,
+                 group="pôles urbains",
+                 icon=~polesIcons[type],
+                 popup=popup_poles) %>%
       #OH
       addPolygons(data=OH_pg,
                   stroke = TRUE,
@@ -347,10 +360,10 @@ shinyServer(function(input, output, session) {
     date_max <- max(input$limites)
     
     if(surl =="date_deb"){ 
-      OH_sur <- OH_subset$OH_A %>% filter(DATE_DEB>=date_min & DATE_DEB<=date_max)
+      OH_sur <- OH_subset$OH_A %>% filter(DATE_DEB>=date_min & DATE_DEB>=date_min)
       col <- "#224f77"
     }else if(surl =="date_fin"){
-      OH_sur <- OH_subset$OH_A %>% filter(DATE_FIN>=date_min & DATE_FIN<=date_max)
+      OH_sur <- OH_subset$OH_A %>% filter(DATE_FIN>=date_min & DATE_FIN>=date_min)
       col <- "#770924"
     }else if (surl =="sur_off"){
       OH_sur <- null_row

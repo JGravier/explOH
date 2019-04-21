@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1531783649926.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "693288959",
+    "id" : "83BC16C2",
+    "lastKnownWriteTime" : 1552299566,
+    "last_content_update" : 1552299566,
+    "path" : "D:/Sync/1recherche/1these/SIG/VISU/shiny/explOH/explOH/global_AFC.R",
+    "project_path" : "global_AFC.R",
+    "properties" : {
+        "cursorPosition" : "154,1",
+        "docOutlineVisible" : "0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
