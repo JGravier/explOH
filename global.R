@@ -1,6 +1,6 @@
 ################################
 # Shiny app pour afficher les objets selon le temps 
-# L. Nahassia, aout 2018
+# L. Nahassia, 2019
 # elements globaux
 ################################
 
@@ -28,6 +28,7 @@ library(ggdendro)
 library(RColorBrewer)
 library(grid)
 library(gridExtra)
+library(ggpubr)
 library(cowplot)
 library(scatterD3)
 library(stringi)
@@ -44,6 +45,7 @@ library(rgdal)
 #sources fichiers
 source("global_AFC.R")
 source("global_zones.R")
+source("global_rythmes.R")
 source("charge_data.R", local=FALSE)
 
 
@@ -141,13 +143,13 @@ theme_ln <- function()
 
 #----------------------------------- éléments HTML ---------
 
-source.zones <- HTML('Cet onglet permet de caractériser la localisation des OH par rapport aux caractéristiques de l\'espace où elles apparaissent puis au cours de leur existence (type d\'occupation urbain/intermédiaire/non urbain et densités du bâti fort/moyen/faible). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse Nahassia, 2019 (en cours). 
+source.zones <- HTML('Cet onglet permet de caractériser la localisation des OH par rapport aux caractéristiques de l\'espace où elles apparaissent puis au cours de leur existence (type d\'occupation urbain/intermédiaire/non urbain et densités du bâti fort/moyen/faible). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 6 de la thèse de L. Nahassia (2019, en cours). 
                   </br></br>
                   Les zones d\'occupation du sol et de densité peuvent être affichées dans l\'onglet <a>exploration globale</a> (ensembles urbains sur la carte), et une schématisation de leur répartition au cours du temps est téléchargeable <a href="schematisations_zones_tours.pdf" target="_blank">ici</a>.
                   ')
 
-source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p>L\'application explOH permet d\'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contexte (les "ensembles urbains", les "traits de rives", ...) provenant du <a href="http://citeres.univ-tours.fr/spip.php?article504", target="_blank">SIG Topographie de Tours PréIndustrielle </a> (ToToPI), développé au <a href="http://citeres.univ-tours.fr/spip.php?rubrique57", target="_blank">Laboratoire d\'Archéologie Urbaine</a> à Tours (UMR 7324 CITERES).</br> </br>
-                    L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse (en cours). Elle a pour objectif d\'accompagner l\'analyse spatio-temporelle de la localisation des activités dans l\'espace urbain de Tours. Elle permet ainsi à l\'utilisateur de naviguer dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique (OH), et d\'afficher les résultats de divers traitements spatio-temporels de manière interactive.
+source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p>L\'application explOH permet d\'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contexte (les "ensembles urbains", les "traits de rives", ...) provenant du <a href="http://citeres.univ-tours.fr/spip.php?article504", target="_blank">SIG Topographie de Tours PréIndustrielle </a> (ToToPI), développé au <a href="http://citeres.univ-tours.fr/spip.php?rubrique57", target="_blank">Laboratoire Archéologie et Territoires</a> à Tours (UMR 7324 CITERES).</br> </br>
+                    L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse (en cours). Elle a pour objectif d\'accompagner l\'analyse spatio-temporelle de la localisation des activités dans l\'espace urbain de Tours. Elle permet ainsi à l\'utilisateur de naviguer dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique, les Objets Historiques  (OH), et d\'afficher les résultats de divers traitements spatio-temporels de manière interactive et en fonction de paramètres ajustables.
                     </br></br>
                     
                     <p class="titre_info">Utilisation : </p>
@@ -160,22 +162,35 @@ source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p
                     <b>Téléchargement :</b> la carte peut être enregistrée en format image (.png) à partir de  <img src=\"icone_dl.png\" alt=\"l\'icone de flèche\"> sur la carte. Les OH sélectionnés peuvent être téléchargé  à partir de l\'outil \"téléchargement\" sous différents formats.
                     
                     </br></br>
+                    <a><span class=\"fa fa-angle-double-right\"></span> analyse rythme : </a></br> 
+                    Cet ongle affiche les résultats d\'une analyse multi-factorielle de la structure temporelle et fonctionnelle des données. Les résultats sont générés en fonction des variables sélectionnées par l\'utilisateur.
+
+                    </br></br>
                     <a><span class=\"fa fa-sort-amount-desc\"></span> analyse factorielle : </a></br> 
                     Cet ongle affiche les résultats d\'une analyse multi-factorielle de la structure temporelle et fonctionnelle des données. Les résultats sont générés en fonction des variables sélectionnées par l\'utilisateur.
                     
                     </br></br>
-                    <a><span class=\"fa fa-square-o\"></span> analyse par zone : </a></br> 
-                    Cet ongle affiche les résultats d\'une analyse spatio-temporelle des caractéristiques de localisation des OH par rapport aux caractéristiques des zones où ils se situent. Les résultats sont générés en fonction du sous-ensemble d\'OH sélectionné par l\'utilisateur.
+                    <a><span class=\"fa fa-square-o\"></span> analyse env. : </a></br> 
+                    Cet ongle affiche les résultats d\'une analyse spatio-temporelle des caractéristiques de localisation des OH par rapport aux caractéristiques de l\'environnement où ils se situent. Les résultats sont générés en fonction du sous-ensemble d\'OH sélectionné par l\'utilisateur.
+                    
+                    </br></br>
+                    <a><span class=\"fa fa-stop-circle\"></span> analyse voisinage : </a></br> 
+                    Cet ongle affiche les résultats d\'une analyse du voisinage d\'apparition des OH à un moment donné et au cours du temps.
                     
                     </br></br>
                     <p class=\"titre_info\">Sources : </p>
                     Données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS. </br>
-                    Fond de carte : OpenStreetMap, CartoDB
+                    Fond de carte : OpenStreetMap, CartoDB.</br>
+                    </br></br>
+                    <p class=\"titre_info\">Licence : </p>
+                    la plateforme explOH est sous licence libre AGPL3.0. </br>
+                    <a target="_blank" href="https://doi.org/10.5281/zenodo.3256682"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.3256682.svg" alt="DOI"></a>  </br>
+                    Le code source est disponibles sur le dépot Github : <a target="_blank" href="http://github.com/heylue/explOH">https://github.com/heylue/explOH</a>.
                     ')
                     
 
 
 source.signature <- HTML(
   '<p class="signature">',
-  "Application développée par Lucie Nahassia, 2017 | Données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS"
+  "Application développée par Lucie Nahassia, 2019 | Données : ToToPI, UMR7324 CITERES-LAT Université de Tours/CNRS"
 )

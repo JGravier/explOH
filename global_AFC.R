@@ -1,6 +1,6 @@
 ################################
 # Shiny app pour afficher les objets selon le temps 
-# L. Nahassia, aout 2018
+# L. Nahassia, 2019
 # analyse factorielle et CAH
 ################################
 
@@ -50,7 +50,7 @@ barplot.dudi.variance <- function(data, sumdata, titre){
     labs(x="Composantes",
          y="Part de la variance expliquée",
          title= titre,
-         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+         caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES")+
     scale_fill_manual(values=alpha(c("grey60","#F39C12"), 0.8)) +
     geom_hline(aes(yintercept=expected_inertia), colour="grey50", linetype="dashed")+
     geom_text(x=max(sumdata$COMP)+0.5, 

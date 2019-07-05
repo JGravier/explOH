@@ -1,8 +1,9 @@
 ################################
 # Shiny app pour afficher les objets selon le temps 
-# L. Nahassia, aout 2018
-# plots analyse zone
+# L. Nahassia, 2019
+# plots analyse environnement
 ################################
+
 facet_labels_occupation <- c("urbaine"="Zone \nd'occupation \nurbaine", "intermediaire"="Zone \nd'occupation \nintermédiaire", "non urbaine"="Zone \nd'occupation \nnon urbaine")
 facet_labels_dens <- c("3"="Zone de \ndensité \nforte (3)", "2"="Zone de \ndensité \nmoyenne (2)", "1"="Zone de \nfaible \ndensité (1)", "0"="Zone \nd'occupation \nnon urbaine")
 facet_labels_portee <- c("1"="1.Faible portée", "2"="2.Portée moyenne", "3"= "3.grande portée", "4"="4.Portée exceptionnelle")
@@ -29,7 +30,7 @@ plot_occupation <- function(df, sous_titre, wrap) {
          subtitle=sous_titre,
          x="année d'apparition",
          y="nombre d'OH",
-         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+         caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES")+
     theme_fivethirtyeight()+
     theme_ln() +
     theme(strip.text.y = element_text(size=10),
@@ -59,7 +60,7 @@ plot_densite <- function(df, sous_titre, wrap) {
          subtitle=sous_titre,
          x="année d'apparition",
          y="nombre d'OH",
-         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+         caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES")+
     theme_fivethirtyeight()+
     theme_ln() +
     theme(strip.text.y = element_text(size=10),
@@ -87,7 +88,7 @@ plot_part_occupation <- function(df, sous_titre) {
          subtitle=sous_titre,
          x="année",
          y="part des apparitions dans \nchaque type d'occupation du sol",
-         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+         caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES")+
     theme_fivethirtyeight()+
     theme_ln() +
     theme(
@@ -117,7 +118,7 @@ plot_part_densite <- function(df, sous_titre) {
          subtitle=sous_titre,
          x="année",
          y="part des apparitions dans \nchaque type d'occupation du sol",
-         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+         caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES")+
     theme_fivethirtyeight()+
     theme_ln() +
     theme(
@@ -173,7 +174,7 @@ plot_exi_densite <- function(df, sous_titre) {
          subtitle=sous_titre,
          x="années",
          y="OH",
-         caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+         caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES")+
     theme_fivethirtyeight()+
     theme_ln()+
     theme(legend.position="bottom",

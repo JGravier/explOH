@@ -1,6 +1,6 @@
 ################################
 # Shiny app pour afficher les objets selon le temps avec leaflet
-# L. Nahassia, aout 2018
+# L. Nahassia, 2019
 # Server
 ################################
 
@@ -35,7 +35,7 @@ shinyServer(function(input, output, session) {
         position="bottomleft",
         options=layersControlOptions(autoZIndex=TRUE, 
                                      collapsed=FALSE)
-        ) %>%
+      ) %>%
       hideGroup(c("traits de rive","ensembles urbains occupation", "ensembles urbains densité")) %>%    
       
       #bouton mesure
@@ -112,7 +112,7 @@ shinyServer(function(input, output, session) {
     req(max(input$limites), min(input$limites))
     ens_urb_subset$tab <- ens_urb %>% filter (date_debut<=max(input$limites) & date_fin>=min(input$limites))
     traits_rive_subset$tab <- traits_rive %>% filter (DEBUT<=max(input$limites) & FIN>=min(input$limites))
-
+    
   })
   
   ##Objets Historiques (temps, fonctions)
@@ -298,7 +298,7 @@ shinyServer(function(input, output, session) {
   
   #TAB OUTPUT
   observe({
-    tabOH <- OH_subset$OH_A %>% as.data.frame %>% select(-geom, -V_URB, - V_URB_NOM, -PORTEE_NOM )
+    tabOH <- OH_subset$OH_A %>% as.data.frame %>% select(-geom, -PORTEE_NOM ) %>% mutate(V_USAGE=as.factor(V_USAGE))
     output$tab_OH <-renderDataTable(
       tabOH,
       filter="bottom",
@@ -468,12 +468,271 @@ shinyServer(function(input, output, session) {
     })
   
   
+  ###########################################################################
+  ##################### ONGLET 2 : RYTHMES ##############################
+  ########################################################################### 
+  
+  #----------------------------------- #3.1.déclaration reactive objects----
+  tabs_rythme <- reactiveValues(melt_nombre=NULL, #nombre d'OH par année et par valeur urbaine/d'usage/portee
+                                melt_pourc=NULL, #pourcentage d'OH par année et par valeur urbaine/d'usage/portee
+                                apparition=NULL, #nombre d'apparition par valeur urbaine/d'usage/portee
+                                disparition=NULL #nombre d'apparition par valeur urbaine/d'usage/portee
+  )
+  
+  #----3.1.création des tableaux ----
+  observeEvent(input$generer_tableaux_exi,{
+    
+    #signal charge
+    removeUI(selector="#fini_tab", immediate=TRUE)
+    insertUI(selector="#generer_tableaux_exi", 
+             where="afterEnd", 
+             ui=HTML('<span id=charge_tab> &nbsp &nbsp <i class="fas fa-circle-notch fa-spin"></i> &nbsp en cours </span>' ),
+             immediate=TRUE)
+    
+    val_usage <- lapply( #récupére la liste des OH sélectionnés
+      1:6, 
+      function(i){
+        substring(
+          eval(parse(text=paste("input$picker_zones_",i,sep=""))), #récupère toutes les options cochées
+          1,2 #ne garde que les deux premiers caractères (=les numéros)
+        )
+      }) %>% unlist %>% as.numeric
+    OH_subset_exi <- OH_geom %>% st_drop_geometry() %>% as_tibble() %>% filter(V_USAGE %in% val_usage) #tableau subset
+    
+    
+    if (input$select_fonction_rythmes=="vurb"){
+      withProgress(message="tableau en cours de calcul", 
+                   calcul_tableaux <- tableau.melt.vurb(OH_subset_exi) #calcul des tableaux
+      )
+      tabs_rythme$melt_nombre <- calcul_tableaux$melt_nb #tableaux dans les reactive values
+      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc #tableaux dans les reactive values
+      tabs_rythme$apparition <- OH_subset_exi %>% plyr::count(c("DATE_DEB","V_URB")) %>% filter(DATE_DEB >= -25)
+      tabs_rythme$disparition <- OH_subset_exi %>% plyr::count(c("DATE_FIN","V_URB"))%>% filter(DATE_FIN >= -25)
+      
+    }
+    else if (input$select_fonction_rythmes=="vusage"){
+      withProgress(message="tableau en cours de calcul", 
+                   calcul_tableaux <- tableau.melt.vusage(OH_subset_exi) #calcul des tableaux
+      )
+      tabs_rythme$melt_nombre <- calcul_tableaux$melt_nb #tableaux dans les reactive values
+      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc #tableaux dans les reactive values
+      tabs_rythme$apparition <- OH_subset_exi %>% plyr::count(c("DATE_DEB","V_USAGE")) %>% filter(DATE_DEB >= -25) %>% mutate(v_urb=substr(V_USAGE,1,1))
+      tabs_rythme$disparition <- OH_subset_exi %>% plyr::count(c("DATE_FIN","V_USAGE"))%>% filter(DATE_FIN >= -25) %>% mutate(v_urb=substr(V_USAGE,1,1))
+      
+    }
+    else if (input$select_fonction_rythmes=="portee"){
+      withProgress(message="tableau en cours de calcul", 
+                   calcul_tableaux <- tableau.melt.portee(OH_subset_exi) #calcul des tableaux
+      )
+      tabs_rythme$melt_nombre <- calcul_tableaux$melt_nb #tableaux dans les reactive values
+      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc #tableaux dans les reactive values
+      tabs_rythme$apparition <- OH_subset_exi %>% plyr::count(c("DATE_DEB","PORTEE")) %>% filter(DATE_DEB >= -25)
+      tabs_rythme$disparition <- OH_subset_exi %>% plyr::count(c("DATE_FIN","PORTEE"))%>% filter(DATE_FIN >= -25)
+      
+    }
+    
+    removeUI(selector="#charge_tab", immediate=FALSE)
+    insertUI(selector="#generer_tableaux_exi", 
+             where="afterEnd", 
+             ui=HTML('<span id=fini_tab> &nbsp &nbsp <i class="fas fa-check"></i> &nbsp tableau prêt </span>' ),
+             immediate=FALSE)
+    
+    
+  })
+  
+  #----3.1.plots répartition simple----
+  observeEvent(input$generer_graphiques_exi,{
+    
+    
+    if(is.null(tabs_rythme$melt_nombre)){ #erreur si tableau pas généré
+      insertUI(selector="#generer_graphiques_exi", 
+               where="afterEnd", 
+               ui=HTML('<span id=erreur_plot1>  générer le tableau </span>' ),
+               immediate=TRUE)
+      
+    }
+    else{ #sinon génére les graphiques
+      
+      removeUI(selector="#erreur_plot1", immediate=TRUE) #suppression du message d'erreur
+      #signal chargement
+      removeUI(selector="#fini_plot1", immediate=TRUE)
+      insertUI(selector="#generer_graphiques_exi", 
+               where="afterEnd", 
+               ui=HTML('<span id=charge_plot1> &nbsp &nbsp <i class="fas fa-circle-notch fa-spin"></i> &nbsp en cours </span>' ),
+               immediate=TRUE)
+      
+      if (input$select_fonction_rythmes=="vurb"){
+        
+        tabOH_nb <- tabs_rythme$melt_nombre #chargement des tableaux
+        tabOH_pourc <- tabs_rythme$melt_pourc
+        
+        repartition <-plot.repartition( #creation des plots
+          dfnb=tabOH_nb,
+          dfpourc=tabOH_pourc,
+          titre="valeur urbaine",
+          couleur=couleurs_vurb)
+        
+        output$plot_exi_OH1 <- renderPlot(repartition$nb)  #rendu des plots
+        output$plot_exi_OH2 <- renderPlot(repartition$pourc)
+        
+
+      }
+      else if (input$select_fonction_rythmes=="portee"){
+        
+        tabOH_nb <- tabs_rythme$melt_nombre #chargement des tableaux
+        tabOH_pourc <- tabs_rythme$melt_pourc
+        
+        repartition <-plot.repartition( #creation des plots
+          dfnb=tabOH_nb,
+          dfpourc=tabOH_pourc,
+          titre="portée",
+          couleur=couleurs_portees)
+        
+        output$plot_exi_OH1 <- renderPlot(repartition$nb) #rendu des plots
+        output$plot_exi_OH2 <- renderPlot(repartition$pourc)
+      }
+      else if (input$select_fonction_rythmes=="vusage"){
+        
+        tabOH_nb <- tabs_rythme$melt_nombre #chargement des tableaux
+        tabOH_pourc <- tabs_rythme$melt_pourc
+        
+        repartition <-plot.repartition.usage( #creation des plots
+          dfnb=tabOH_nb,
+          dfpourc=tabOH_pourc)
+        
+        output$plot_exi_OH1 <- renderPlot(repartition$nb) #rendu des plots
+        output$plot_exi_OH2 <- renderPlot(repartition$pourc)
+      }
+      
+      #signal fin
+      removeUI(selector="#charge_plot1", immediate=FALSE)
+      insertUI(selector="#generer_graphiques_exi", 
+               where="afterEnd", 
+               ui=HTML('<span id=fini_plot1> &nbsp &nbsp <i class="fas fa-check"></i></span>' ),
+               immediate=FALSE)
+      }
+    })
+  
+  
+  #----3.2.plots apparition et disparition----
+  
+  observeEvent(input$generer_graphiques_appdisp,{
+    
+    if(is.null(tabs_rythme$melt_nombre)){ #erreur si tableau pas généré
+      insertUI(selector="#generer_graphiques_appdisp", 
+               where="afterEnd", 
+               ui=HTML('<span id=erreur_plot2> générer le tableau </span>' ),
+               immediate=TRUE)
+      
+    }
+    else{ #sinon génére les graphiques
+
+      removeUI(selector="#erreur_plot2", immediate=TRUE) #suppression du message d'erreur
+      #signal chargement
+      removeUI(selector="#fini_plot2", immediate=TRUE)
+      insertUI(selector="#generer_graphiques_appdisp",
+               where="afterEnd",
+               ui=HTML('<span id=charge_plot2> &nbsp &nbsp <i class="fas fa-circle-notch fa-spin"></i> &nbsp en cours </span>' ),
+               immediate=TRUE)
+      
+      if (input$select_fonction_rythmes=="vurb"){
+        output$plot_app_disp <- renderPlot(
+          ggplot()+
+            geom_line(data = tabs_rythme$melt_nombre %>% mutate(V_URB=stri_sub(variable,1,1)),
+                      aes(x=annee, y=value),
+                      color="grey60")+
+            geom_col(data=tabs_rythme$apparition,
+                     aes(x=DATE_DEB, y=freq,fill=V_URB),
+                     width=15)+
+            geom_col(data=tabs_rythme$disparition,
+                     aes(x=DATE_FIN, y=-freq, fill=V_URB),
+                     alpha=0.5,
+                     width=15)+
+            scale_fill_manual(values=couleurs_vurb)+
+            facet_wrap(~V_URB, ncol=1, scales="free_y",
+                       labeller = as_labeller(labels_vurb))+
+            labs(x="année",
+                 y="nombre d'OH",
+                 title="Rythme d'apparition et de disparition des OH par valeur urbaine",
+                 caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, CITERES-LAT"
+            )+
+            theme_fivethirtyeight()+
+            scale_x_continuous(breaks = c(1,seq(200,2000,200)))+
+            theme_ln()+
+            theme(strip.text=element_text(hjust = 0))
+        )
+      }
+      else if (input$select_fonction_rythmes=="portee"){
+        
+        output$plot_app_disp <- renderPlot(
+          ggplot()+
+            geom_line(data = tabs_rythme$melt_nombre %>% mutate(PORTEE=stri_sub(variable,1,1)),
+                      aes(x=annee, y=value),
+                      color="grey60")+
+            geom_col(data=tabs_rythme$apparition %>% mutate(PORTEE=as.factor(PORTEE)),
+                     aes(x=DATE_DEB, y=freq,fill=PORTEE),
+                     width=15)+
+            geom_col(data=tabs_rythme$disparition%>% mutate(PORTEE=as.factor(PORTEE)),
+                     aes(x=DATE_FIN, y=-freq, fill=PORTEE),
+                     alpha=0.5,
+                     width=15)+
+            scale_fill_manual(values=couleurs_portees)+
+            facet_wrap(~PORTEE, ncol=1, scales="free_y",
+                       labeller = as_labeller(labels_portees))+
+            labs(x="année",
+                 y="nombre d'OH",
+                 title="Rythme d'apparition et de disparition des OH par portée",
+                 caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, CITERES-LAT"
+            )+
+            theme_fivethirtyeight()+
+            scale_x_continuous(breaks = c(1,seq(200,2000,200)))+
+            theme_ln()+
+            theme(strip.text=element_text(hjust = 0))
+        )
+      }
+      else if (input$select_fonction_rythmes=="vusage"){
+        
+        output$plot_app_disp <- renderPlot(
+          ggplot()+
+            geom_col(data=tabs_rythme$apparition,
+                     aes(x=DATE_DEB, y=freq,fill=v_urb),
+                     width=15)+
+            geom_col(data=tabs_rythme$disparition,
+                     aes(x=DATE_FIN, y=-freq, fill=v_urb),
+                     alpha=0.5,
+                     width=15)+
+            scale_fill_manual(values=couleurs_vurb)+
+            facet_wrap(~V_USAGE, ncol=4, scales="free_y")+
+            labs(x="année",
+                 y="nombre d'OH",
+                 title="Rythme d'apparition et de disparition des OH par valeurs d'usage",
+                 caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, CITERES-LAT"
+            )+
+            theme_fivethirtyeight()+
+            scale_x_continuous(breaks = c(1,seq(200,2000,200)))+
+            theme_ln()+
+            theme(strip.text=element_text(hjust = 0),
+                  axis.text.x=element_text(angle = 90))
+        )
+      }
+      
+      #signal fin
+      removeUI(selector="#charge_plot2", immediate=FALSE)
+      insertUI(selector="#generer_graphiques_appdisp", 
+               where="afterEnd", 
+               ui=HTML('<span id=fini_plot2> &nbsp &nbsp <i class="fas fa-check"></i></span>' ),
+               immediate=FALSE)
+    }
+    
+  })
+  
+  
   
   ###########################################################################
-  ##################### ONGLET 2 : AFC & CAH ##############################
+  ##################### ONGLET 3 : AFC & CAH ##############################
   ###########################################################################
   
-  #----------------------------------- #2.1.déclaration reactive objects----
+  #----------------------------------- #3.1.déclaration reactive objects----
   tab_contingence <- reactiveValues(tab=NULL)
   reacAFC <- reactiveValues(data=NULL, #resultat du dudi.coa
                             periodes = NULL, #découpage par période
@@ -485,7 +744,7 @@ shinyServer(function(input, output, session) {
   reacCAH <- reactiveValues(data=NULL)
   ranges <- reactiveValues(x = NULL, y = NULL)
   
-  #----------------------------------- #2.2.INPUT > DONNEES : mise à jour du tableau de contingence & calcul AFC ----
+  #----------------------------------- #3.2.INPUT > DONNEES : mise à jour du tableau de contingence & calcul AFC ----
   observe(priority = 11, {
     nom <- paste("tab",input$select_var,input$select_periodes, sep="_")
     tab_contingence$tab <- get(nom)
@@ -505,7 +764,7 @@ shinyServer(function(input, output, session) {
     
   })
   
-  #----------------------------------- #2.3.INPUT > OUTPUT ----
+  #----------------------------------- #3.3.INPUT > OUTPUT ----
   
   #---- tableau de contingence----
   observe(priority = 10, {
@@ -617,7 +876,7 @@ shinyServer(function(input, output, session) {
                 transitions = FALSE,
                 fixed=TRUE,
                 caption =list(title=biplot_titre,
-                              subtitle ="L. Nahassia, Géographie-cité, 2018 | Sources : ToToPI, LAT, CITERES")
+                              subtitle ="L. Nahassia, Géographie-cité, 2019 | Sources : ToToPI, LAT, CITERES")
                 
       )
     output$plot_biplot <- renderScatterD3(biplot)
@@ -676,7 +935,7 @@ shinyServer(function(input, output, session) {
         labs(
           title="Dendrogramme de la CAH",
           subtitle=stitre,
-          caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES",
+          caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES",
           x="périodes",
           y="indice de similarité")+
         theme_fivethirtyeight()+
@@ -713,7 +972,7 @@ shinyServer(function(input, output, session) {
         labs(
           title="Part de l'inertie des différentes coupes de la CAH",
           subtitle= soustitre,
-          caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES",
+          caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES",
           x="nombre de classes",
           y="Part de l'inertie totale (%)")+
         scale_x_continuous(breaks=c(1:length(tab)), expand=c(0.01, 0.01))+
@@ -797,7 +1056,7 @@ shinyServer(function(input, output, session) {
           y="Valeurs urbaines",
           title= "Caractérisation des périodes urbaines par type de fonctions",
           subtitle="Classe de périodes: CAH (distance khi2)",
-          caption="L. Nahassia, Géographie-cités, 2018 | Sources : ToToPI, LAT, CITERES")+
+          caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, LAT, CITERES")+
         theme_fivethirtyeight()+
         theme_ln()
       
@@ -806,7 +1065,7 @@ shinyServer(function(input, output, session) {
   })
   
   #####################################################################
-  ##################### ONGLET 3 : ZONES ##############################
+  ##################### ONGLET 4 : ZONES ##############################
   #####################################################################
   
   observe({
@@ -852,6 +1111,6 @@ shinyServer(function(input, output, session) {
   })
   
   
-}) # fin du serveur
+  }) # fin du serveur
 
 

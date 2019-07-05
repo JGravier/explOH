@@ -1,6 +1,6 @@
 ################################
 # Shiny app pour afficher les objets selon le temps 
-# L. Nahassia, aout 2018
+# L. Nahassia, 2019
 # chargement des données
 ################################
 
@@ -10,28 +10,6 @@ proj_2154 = EPSG[which(EPSG$code == 2154), "prj4"]
 proj_4326 = EPSG[which(EPSG$code == 4326), "prj4"]
 
 
-#----------------------------------- 1. Données contextuelles & csv analyses ----
-
-#shapefiles contextes
-ens_urb_total <-  st_read(dsn="./data/ToToPI_V3.gpkg", layer="ensembles_urbains",quiet=TRUE)
-ens_urb <- st_transform(ens_urb_total, proj_4326)
-traits_rive_total <- st_read(dsn="./data/shapes", layer="traits_rive_2154", stringsAsFactors = FALSE, quiet = TRUE)
-traits_rive <- st_transform(traits_rive_total, proj_4326)
-
-#OH pour analyse zone
-OH_over_app <- read.csv("./data/OH_over_app.csv", encoding="UTF-8", header=TRUE)
-OH_over_app$occupation <- factor(OH_over_app$occupation, levels=c("urbaine", "intermediaire","non urbaine"))
-OH_over_app$densite <- factor(OH_over_app$densite, levels=c("3","2","1","0"))
-OH_over_exi <-read.csv("./data/OH_over_exi.csv", encoding="UTF-8", header=TRUE)
-OH_over_exi$densite <- factor(OH_over_exi$densite, levels=c("3","2","1","0"))
-OH_over_exi$OH_NUM <- as.character(OH_over_exi$OH_NUM)
-exi_ordre <- OH_over_exi %>% mutate(OH_NUM2 = forcats::fct_reorder(.f = OH_NUM,date_debut_OH)) #ordre pour tableau longitudinal
-exi_transitions <- OH_over_exi %>% #tableau des transitions
-  select(date_debut, date_fin, date_fin_OH, occupation, densite, OH_NUM, V_USAGE, V_URB, PORTEE) %>% 
-  mutate(date_transition=date_fin, lead_occ =lead(occupation), lead_dens= lead(densite)) %>% 
-  mutate(trans_occ = paste(occupation,"\nà\n", lead_occ, sep=" ") %>% as.factor,trans_dens = paste(densite,"à", lead_dens, sep=" ") %>% as.factor()) %>% 
-  filter(date_fin!=date_fin_OH) %>% 
-  select(date_transition, occupation, lead_occ, trans_occ, densite, lead_dens, trans_dens,OH_NUM, V_USAGE, V_URB, PORTEE)
 
 #-----------------------------------  2. Objets historiques ----
 
@@ -84,6 +62,28 @@ OH_geom$FIAB_DISP[OH_geom$FIAB_DISP == ""] <- 0
 OH_geom$FIAB_DISP <- droplevels(OH_geom$FIAB_DISP)
 OH_geom$FIAB_APP <- as.factor(OH_geom$FIAB_APP)
 
+#----------------------------------- 1. Données contextuelles & csv analyses ----
+
+#shapefiles contextes
+ens_urb_total <-  st_read(dsn="./data/ToToPI_V3.gpkg", layer="ensembles_urbains",quiet=TRUE)
+ens_urb <- st_transform(ens_urb_total, proj_4326)
+traits_rive_total <- st_read(dsn="./data/shapes", layer="traits_rive_2154", stringsAsFactors = FALSE, quiet = TRUE)
+traits_rive <- st_transform(traits_rive_total, proj_4326)
+
+#OH pour analyse zone
+OH_over_app <- read.csv("./data/OH_over_app.csv", encoding="UTF-8", header=TRUE)
+OH_over_app$occupation <- factor(OH_over_app$occupation, levels=c("urbaine", "intermediaire","non urbaine"))
+OH_over_app$densite <- factor(OH_over_app$densite, levels=c("3","2","1","0"))
+OH_over_exi <-read.csv("./data/OH_over_exi.csv", encoding="UTF-8", header=TRUE)
+OH_over_exi$densite <- factor(OH_over_exi$densite, levels=c("3","2","1","0"))
+OH_over_exi$OH_NUM <- as.character(OH_over_exi$OH_NUM)
+exi_ordre <- OH_over_exi %>% mutate(OH_NUM2 = forcats::fct_reorder(.f = OH_NUM,date_debut_OH)) #ordre pour tableau longitudinal
+exi_transitions <- OH_over_exi %>% #tableau des transitions
+  select(date_debut, date_fin, date_fin_OH, occupation, densite, OH_NUM, V_USAGE, V_URB, PORTEE) %>% 
+  mutate(date_transition=date_fin, lead_occ =lead(occupation), lead_dens= lead(densite)) %>% 
+  mutate(trans_occ = paste(occupation,"\nà\n", lead_occ, sep=" ") %>% as.factor,trans_dens = paste(densite,"à", lead_dens, sep=" ") %>% as.factor()) %>% 
+  filter(date_fin!=date_fin_OH) %>% 
+  select(date_transition, occupation, lead_occ, trans_occ, densite, lead_dens, trans_dens,OH_NUM, V_USAGE, V_URB, PORTEE)
 
 #----------------------------------- 3. Listes vurb et vusage ----
 

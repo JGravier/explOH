@@ -3,7 +3,7 @@
 Plateforme d'exploration interactive des données Objet Historiques et des résultats issus de la méthode ACAMU, développé en lien avec le travail de thèse de L. Nahassia (en cours)
 
 ## Informations sur l'application :
-L'application explOH permet d'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contexte (les "ensembles urbains", les "traits de rives", ...) provenant du SIG [Topographie de Tours PréIndustrielle (ToToPI)](http://citeres.univ-tours.fr/spip.php?article504), développé au [Laboratoire d'Archéologie et Territoire à Tours](http://citeres.univ-tours.fr/spip.php?rubrique57) (UMR 7324 CITERES).
+L'application explOH permet d'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contexte (les "ensembles urbains", les "traits de rives", ...) provenant du SIG [Topographie de Tours PréIndustrielle (ToToPI)](http://citeres.univ-tours.fr/spip.php?article504), développé au [Laboratoire Archéologie et Territoires ](http://citeres.univ-tours.fr/spip.php?rubrique57) à Tours(UMR 7324 CITERES).
 
 L'application est développée par [Lucie Nahassia](http://www.parisgeo.cnrs.fr/spip.php?article6441) dans le cadre de sa thèse (en cours). Elle a pour objectif d'accompagner l'analyse spatio-temporelle de la localisation des activités dans l'espace urbain de Tours. Elle permet à l'utilisateur de naviguer dans les données utilisées au niveau le plus élémentaire de l'individu topographique historique, les Objets Historiques (OH), et d'afficher les résultats de divers traitements spatio-temporels de manière interactive et en fonction de paramètres ajustables.
 
