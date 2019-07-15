@@ -17,11 +17,9 @@ library(shinyjqui)
 library(htmlwidgets)
 library(leaflet)
 library(RSQLite)
-library(dplyr)
-library(tidyr)
+library(tidyverse)
 library(DT)
 library(reshape2)
-library(ggplot2)
 library(ggrepel)
 library(ggthemes)
 library(ggdendro)
@@ -32,20 +30,17 @@ library(ggpubr)
 library(cowplot)
 library(scatterD3)
 library(stringi)
-library(stringr)
 library(ade4)
-library(tibble)
-library(forcats)
 
 #Spatialobjects
 library(rgdal)
 library(sf)
-library(rgdal)
+library(rgeos)
 
 #sources fichiers
+source("global_rythmes.R")
 source("global_AFC.R")
 source("global_zones.R")
-source("global_rythmes.R")
 source("charge_data.R", local=FALSE)
 
 
@@ -53,10 +48,8 @@ source("charge_data.R", local=FALSE)
 
 #ligne NA pour addCircles de LeafletProxy
 null_row <- OH_geom[st_geometry_type(OH_geom)=="POINT",][1,]
-# null_row[] <- NA
-# null_row$DATE_DEB <- -20000
-# null_row$DATE_FIN <- -20000
-# st_geometry(null_row) <- st_geometry(OH_geom[st_geometry_type(OH_geom)=="POINT",][1,])
+#labels pour voisinage
+facet_labels_vois <- c("portee"="voisinage selon la \nportée des OH", "valeur urbaine"="voisinage selon la \nvaleur urbaine des OH")
 
 #----------------------------------- PALETTES ----
 ##VURB
@@ -77,11 +70,15 @@ palette_fiab_d <- colorFactor(couleurs_fiab, rev(order(levels(OH_geom$FIAB_DISP)
 palette_CAH  <- colorRampPalette(c("#E8C95D","#eb8179","#85dbbd","#628aba","#a39e96"))
 #ensembles urbains
 couleurs_EU  <- c("#c8ab37","#a05050")
-palette_EU <- colorFactor(couleurs_EU, unique(ens_urb$occupation))
+palette_EU <- colorFactor(couleurs_EU, unique(zst$occupation))
 couleurs_EU2 <- c("#aaddd4","#3ab29d","#016957")
-palette_EU2 <- colorFactor(couleurs_EU2, unique(ens_urb$densite))
+palette_EU2 <- colorFactor(couleurs_EU2, unique(zst$densite))
+#voisinages vurb + portee
+palette_vurb_p <- c(couleurs_vurb, couleurs_portees)
+names(palette_vurb_p) <- c("urb_1", "urb_2", "urb_3", "urb_4", "urb_5", "urb_6", "p_1", "p_2", "p_3", "p_4")
 
-  
+
+
 
 #----------------------------------- FONCTIONS POPUP ----
 
@@ -96,7 +93,7 @@ texte_popup_OH <- function(df) {
 }
 
 
-texte_popup_ens_urb <- function(df) {
+texte_popup_zst <- function(df) {
   paste(sep="",
         "<h5> <b>ID: ", df$ID, ", ", df$ID_nom, " </h5></b>", 
         df$date_debut,"-",df$date_fin,
@@ -143,10 +140,21 @@ theme_ln <- function()
 
 #----------------------------------- éléments HTML ---------
 
-source.zones <- HTML('Cet onglet permet de caractériser la localisation des OH par rapport aux caractéristiques de l\'espace où elles apparaissent puis au cours de leur existence (type d\'occupation urbain/intermédiaire/non urbain et densités du bâti fort/moyen/faible). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 6 de la thèse de L. Nahassia (2019, en cours). 
+source.zones <- HTML('Cet onglet permet de caractériser la localisation des OH par rapport aux caractéristiques de l\'espace où ils apparaissent puis au cours de leur existence (type d\'occupation urbain/intermédiaire/non urbain et densités du bâti fort/moyen/faible). Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 6 de la thèse de L. Nahassia (2019, en cours). 
                   </br></br>
                   Les zones d\'occupation du sol et de densité peuvent être affichées dans l\'onglet <a>exploration globale</a> (ensembles urbains sur la carte), et une schématisation de leur répartition au cours du temps est téléchargeable <a href="schematisations_zones_tours.pdf" target="_blank">ici</a>.
                   ')
+
+
+
+source.voisinage <- HTML('Cet onglet permet de caractériser la localisation des OH par rapport à leur voisinage au moment de leur apparition. Le voisinage est défini comme l\'ensemble des activités situées dans un périmètre autour d\'une activité donnée, observé dans un intervalle de temps autour de l\'année d\'apparition de cette dernière. La taille du périmètre et la longueur de l\'intervalle de temps sont paramétrables.
+                        Un voisinage évolutif en trois périodes, correspondant à celui utilisé dans la thèse (voir ci-dessous), est proposé : 100 m avant 600, 60 m entre 600 et 1550 et 30 m après 1550.
+                        </br> Les traitements ci-desous représentent les profils des voisinages moyens pour une catégorie d\'activité choisie par l\'utilisateur (activités de valeur urbaine 1, activité de portée 2, etc.).Les voisinages sont représentés de manière absolue (nombre d\'activité de chaque type dans le voisinage) et de manière relative. Ils sont alors comparés (centrés-réduits) à chaque pas de temps au voisinage moyen de toutes les activités apparaissant à ce pas de temps.
+                        </br></br>
+                         Du point de vue temporel, le voisinage d\'apparition peut être étudié de deux manières :</br>
+                         1. onglet bleu : étude des transformations du voisinage d\'un type d\'activité sur toute la durée d\'étude</br>
+                         2. onglet vert : étude du voisinage d\'un type d\'activité à un moment donné (un intervalle de temps autour d\'une date choisie)</br> </br>
+                         Le détail et un commentaire de ce traitement  peut être consulté dans le Chapitre 7 de la thèse de L. Nahassia (2019, en cours).')
 
 source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p>L\'application explOH permet d\'explorer temporellement et spatialement les données "Objets Historiques" (OH) accompagnées de données de contexte (les "ensembles urbains", les "traits de rives", ...) provenant du <a href="http://citeres.univ-tours.fr/spip.php?article504", target="_blank">SIG Topographie de Tours PréIndustrielle </a> (ToToPI), développé au <a href="http://citeres.univ-tours.fr/spip.php?rubrique57", target="_blank">Laboratoire Archéologie et Territoires</a> à Tours (UMR 7324 CITERES).</br> </br>
                     L\'application est développée par <a href="http://www.parisgeo.cnrs.fr/spip.php?article6441" target="_blank">Lucie Nahassia</a> dans le cadre de sa thèse (en cours). Elle a pour objectif d\'accompagner l\'analyse spatio-temporelle de la localisation des activités dans l\'espace urbain de Tours. Elle permet ainsi à l\'utilisateur de naviguer dans les données utilisées au niveau le plus élémentaire de l\'individu topographique historique, les Objets Historiques  (OH), et d\'afficher les résultats de divers traitements spatio-temporels de manière interactive et en fonction de paramètres ajustables.
@@ -187,7 +195,7 @@ source.info <- HTML('<p class="titre_info">Informations sur l\'application : </p
                     <a target="_blank" href="https://doi.org/10.5281/zenodo.3256682"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.3256682.svg" alt="DOI"></a>  </br>
                     Le code source est disponibles sur le dépot Github : <a target="_blank" href="http://github.com/heylue/explOH">https://github.com/heylue/explOH</a>.
                     ')
-                    
+
 
 
 source.signature <- HTML(

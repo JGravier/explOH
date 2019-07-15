@@ -31,12 +31,12 @@ shinyServer(function(input, output, session) {
       
       ##layer control
       addLayersControl(
-        overlayGroups = c("géometries des OH", "ensembles urbains occupation", "ensembles urbains densité","traits de rive"),
+        overlayGroups = c("géometries des OH", "ZST occupation", "ZST densité","traits de rive"),
         position="bottomleft",
         options=layersControlOptions(autoZIndex=TRUE, 
                                      collapsed=FALSE)
       ) %>%
-      hideGroup(c("traits de rive","ensembles urbains occupation", "ensembles urbains densité")) %>%    
+      hideGroup(c("traits de rive","ZST occupation", "ZST densité")) %>%    
       
       #bouton mesure
       addMeasure(
@@ -78,7 +78,7 @@ shinyServer(function(input, output, session) {
     message = NULL
   )
   #contexte
-  ens_urb_subset <- reactiveValues(tab = ens_urb)
+  zst_subset <- reactiveValues(tab = zst)
   traits_rive_subset <- reactiveValues(tab = traits_rive)
   #couleurs
   legende <- reactiveValues(
@@ -110,7 +110,7 @@ shinyServer(function(input, output, session) {
   observe({
     
     req(max(input$limites), min(input$limites))
-    ens_urb_subset$tab <- ens_urb %>% filter (date_debut<=max(input$limites) & date_fin>=min(input$limites))
+    zst_subset$tab <- zst %>% filter (date_debut<=max(input$limites) & date_fin>=min(input$limites))
     traits_rive_subset$tab <- traits_rive %>% filter (DEBUT<=max(input$limites) & FIN>=min(input$limites))
     
   })
@@ -203,8 +203,6 @@ shinyServer(function(input, output, session) {
   observe ({
     OH_add <- OH_subset$tab_add    
     OH_pt <- OH_add[st_geometry_type(OH_add)=="POINT",] %>% st_cast("POINT")
-    #ajout d'un OH dummy à OH_pt pour contourner le bug de leafletProxy avec df vide (OH généré dans global)
-    # OH_pt <- rbind(OH_pt, null_row)
     OH_pg <- OH_add[st_geometry_type(OH_add)=="MULTIPOLYGON",] %>% st_cast("MULTIPOLYGON")
     OH_pl <- OH_add[st_geometry_type(OH_add)=="MULTILINESTRING",] %>% st_cast("MULTILINESTRING")
     
@@ -227,7 +225,7 @@ shinyServer(function(input, output, session) {
     couleurs_pt <- ~legende$pal_couleurs(OH_pt$FIAB_DISP)}
     
     #POPUP
-    popup_ens_urb <- texte_popup_ens_urb(ens_urb_subset$tab)
+    popup_zst <- texte_popup_zst(zst_subset$tab)
     popup_traits_rive <- texte_popup_traits_rive(traits_rive_subset$tab)
     popup_pg <-texte_popup_OH(OH_pg)
     popup_pl <-texte_popup_OH(OH_pl)
@@ -239,24 +237,24 @@ shinyServer(function(input, output, session) {
     # CARTE
     leafletProxy("map", data=OH_pt) %>%
       clearMarkers() %>%
-      clearGroup(group=c("ensembles urbains occupation", "ensembles urbains densité", "traits de rive")) %>%
+      clearGroup(group=c("ZST occupation", "ZST densité", "traits de rive")) %>%
       removeControl(layerId = c("nombre","periode")) %>% 
       #nombre d'OH
       addControl(position="topright", html=OH_subset$message, layerId = "nombre") %>% 
       addControl(position="topright", html=subset_dates, layerId = "periode") %>%
       #contexte
-      addPolygons(data=ens_urb_subset$tab,
-                  group="ensembles urbains occupation",
-                  color=palette_EU(ens_urb_subset$tab$occupation),
-                  fillOpacity=0.1*ens_urb_subset$tab$densite,
+      addPolygons(data=zst_subset$tab,
+                  group="ZST occupation",
+                  color=palette_EU(zst_subset$tab$occupation),
+                  fillOpacity=0.1*zst_subset$tab$densite,
                   weight=1,
-                  popup=popup_ens_urb) %>%
-      addPolygons(data=ens_urb_subset$tab,
-                  group="ensembles urbains densité",
-                  color=palette_EU2(ens_urb_subset$tab$densite),
+                  popup=popup_zst) %>%
+      addPolygons(data=zst_subset$tab,
+                  group="ZST densité",
+                  color=palette_EU2(zst_subset$tab$densite),
                   fillOpacity=0.2,
                   weight=1,
-                  popup=popup_ens_urb) %>%
+                  popup=popup_zst) %>%
       addPolylines(data=traits_rive_subset$tab,
                    group="traits de rive",
                    color="#2260aa",#pointillés ?
@@ -493,7 +491,7 @@ shinyServer(function(input, output, session) {
       1:6, 
       function(i){
         substring(
-          eval(parse(text=paste("input$picker_zones_",i,sep=""))), #récupère toutes les options cochées
+          eval(parse(text=paste("input$picker_rythmes_",i,sep=""))), #récupère toutes les options cochées
           1,2 #ne garde que les deux premiers caractères (=les numéros)
         )
       }) %>% unlist %>% as.numeric
@@ -505,7 +503,7 @@ shinyServer(function(input, output, session) {
                    calcul_tableaux <- tableau.melt.vurb(OH_subset_exi) #calcul des tableaux
       )
       tabs_rythme$melt_nombre <- calcul_tableaux$melt_nb #tableaux dans les reactive values
-      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc #tableaux dans les reactive values
+      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc
       tabs_rythme$apparition <- OH_subset_exi %>% plyr::count(c("DATE_DEB","V_URB")) %>% filter(DATE_DEB >= -25)
       tabs_rythme$disparition <- OH_subset_exi %>% plyr::count(c("DATE_FIN","V_URB"))%>% filter(DATE_FIN >= -25)
       
@@ -515,7 +513,7 @@ shinyServer(function(input, output, session) {
                    calcul_tableaux <- tableau.melt.vusage(OH_subset_exi) #calcul des tableaux
       )
       tabs_rythme$melt_nombre <- calcul_tableaux$melt_nb #tableaux dans les reactive values
-      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc #tableaux dans les reactive values
+      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc
       tabs_rythme$apparition <- OH_subset_exi %>% plyr::count(c("DATE_DEB","V_USAGE")) %>% filter(DATE_DEB >= -25) %>% mutate(v_urb=substr(V_USAGE,1,1))
       tabs_rythme$disparition <- OH_subset_exi %>% plyr::count(c("DATE_FIN","V_USAGE"))%>% filter(DATE_FIN >= -25) %>% mutate(v_urb=substr(V_USAGE,1,1))
       
@@ -525,7 +523,7 @@ shinyServer(function(input, output, session) {
                    calcul_tableaux <- tableau.melt.portee(OH_subset_exi) #calcul des tableaux
       )
       tabs_rythme$melt_nombre <- calcul_tableaux$melt_nb #tableaux dans les reactive values
-      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc #tableaux dans les reactive values
+      tabs_rythme$melt_pourc <- calcul_tableaux$melt_pourc
       tabs_rythme$apparition <- OH_subset_exi %>% plyr::count(c("DATE_DEB","PORTEE")) %>% filter(DATE_DEB >= -25)
       tabs_rythme$disparition <- OH_subset_exi %>% plyr::count(c("DATE_FIN","PORTEE"))%>% filter(DATE_FIN >= -25)
       
@@ -575,7 +573,7 @@ shinyServer(function(input, output, session) {
         output$plot_exi_OH1 <- renderPlot(repartition$nb)  #rendu des plots
         output$plot_exi_OH2 <- renderPlot(repartition$pourc)
         
-
+        
       }
       else if (input$select_fonction_rythmes=="portee"){
         
@@ -610,8 +608,8 @@ shinyServer(function(input, output, session) {
                where="afterEnd", 
                ui=HTML('<span id=fini_plot1> &nbsp &nbsp <i class="fas fa-check"></i></span>' ),
                immediate=FALSE)
-      }
-    })
+    }
+  })
   
   
   #----3.2.plots apparition et disparition----
@@ -626,7 +624,7 @@ shinyServer(function(input, output, session) {
       
     }
     else{ #sinon génére les graphiques
-
+      
       removeUI(selector="#erreur_plot2", immediate=TRUE) #suppression du message d'erreur
       #signal chargement
       removeUI(selector="#fini_plot2", immediate=TRUE)
@@ -636,7 +634,7 @@ shinyServer(function(input, output, session) {
                immediate=TRUE)
       
       if (input$select_fonction_rythmes=="vurb"){
-        output$plot_app_disp <- renderPlot(
+        output$plot_app_disp <- renderPlot( #création du plot
           ggplot()+
             geom_line(data = tabs_rythme$melt_nombre %>% mutate(V_URB=stri_sub(variable,1,1)),
                       aes(x=annee, y=value),
@@ -664,7 +662,7 @@ shinyServer(function(input, output, session) {
       }
       else if (input$select_fonction_rythmes=="portee"){
         
-        output$plot_app_disp <- renderPlot(
+        output$plot_app_disp <- renderPlot( #création du plot
           ggplot()+
             geom_line(data = tabs_rythme$melt_nombre %>% mutate(PORTEE=stri_sub(variable,1,1)),
                       aes(x=annee, y=value),
@@ -691,8 +689,7 @@ shinyServer(function(input, output, session) {
         )
       }
       else if (input$select_fonction_rythmes=="vusage"){
-        
-        output$plot_app_disp <- renderPlot(
+        output$plot_app_disp <- renderPlot( #création du plot
           ggplot()+
             geom_col(data=tabs_rythme$apparition,
                      aes(x=DATE_DEB, y=freq,fill=v_urb),
@@ -1110,7 +1107,298 @@ shinyServer(function(input, output, session) {
     
   })
   
+  #########################################################################
+  ##################### ONGLET 5 : VOISINAGE ##############################
+  #########################################################################
   
-  }) # fin du serveur
+  
+  #----------------------------------- #5.1.déclaration reactive objects----
+  tab_voisinage <- reactiveValues(voisins_tout=NULL, #table OH avec les OH voisins en fonction d'une taille tampon donnée
+                                  voisinage_ref=NULL, #table du voisinage moyen tous OH confondus (format long)
+                                  voisinage_etudie=NULL, #table du voisinage moyen des OH selectionnés (format long)
+                                  test=NULL #dummy variable pour gérer la priorité des exécutions
+  ) 
+  
+  #----------------------------------- #5.2.calcul du voisinage de chaque OH en fonction du buffer donné par l'utilisateur ----
+  
+  observe({
+    
+    removeUI(selector="#fini_tab_voisin", immediate=TRUE)
+    insertUI(selector="#taille_tampon", 
+             where="afterEnd", 
+             ui=HTML('</br> <span id=charge_tab_voisin> &nbsp &nbsp <i class="fas fa-circle-notch fa-spin"></i> &nbsp en cours </span>' ),
+             immediate=TRUE)
+    
+    if (input$choix_tampon ==" trois_tailles"){
+      tab_voisinage$voisins_tout <- OH_voisins_3P 
+    }
+    else if(input$choix_tampon=="une_taille") {
+      taille_buffer <- input$taille_tampon
+      OH <- st_transform(OH_geom, proj_2154)
+      #tableau 1 OH_voisins : liste des numéros d'OH 
+      OH_voisins <-  OH %>%  mutate (voisins_app="null") %>% filter(REFERENCE!="Nahassia 2019" | is.na(REFERENCE)) #sans les cimetières ajoutés
+      withProgress(message="calcul du voisinage des OH en cours", 
+                   #calcul pour chaque OH de la liste des OH dans un rayon de Xm autour de lui au moment de son apparition
+                   for(i in OH_voisins$OH_NUM){
+                     OH_test <-OH[OH$OH_NUM==i,] #OH qui apparait
+                     OH_autour <- OH %>% subset(DATE_DEB <= OH_test$DATE_DEB & DATE_FIN >= OH_test$DATE_DEB)#ensemble des OH existants au moment de l'apparition
+                     inters <- st_intersects(OH_test%>% st_buffer(taille_buffer), OH_autour) #intersection
+                     inters_OHNUM <- OH_autour[inters[[1]],]$OH_NUM # liste sous forme des OH_NUM 
+                     inters_OHNUM <- inters_OHNUM[inters_OHNUM != i] #suppression de OH_test de la listes
+                     OH_voisins[OH_voisins$OH_NUM==i,]$voisins_app <- list(inters_OHNUM)
+                     
+                   })
+      #tableau 2 OH_voisinage : OH étudiés avec caractéristiques + nombre de chaque type d'OH voisins (vurb / portee) (1 colonne par type)
+      #1.OH_voisins_long
+      #structure du tableau
+      OH_voisins_long <- OH_voisins %>% as_tibble() %>% select(OH_NUM, V_USAGE, V_URB, PORTEE, -geom) %>% mutate(OHref=PORTEE)
+      OH_voisins_long <- OH_voisins_long[0,]
+      #remplissage du tableau
+      withProgress(message="calcul du voisinage des OH en cours",
+                   for(i in OH_voisins$OH_NUM){
+                     tmp <- OH_voisins %>% as_tibble() %>% select(OH_NUM, V_USAGE, V_URB, PORTEE, -geom) %>%
+                       filter(OH_NUM %in% OH_voisins[OH_voisins$OH_NUM==i,]$voisins_app[[1]]) %>% #récuperer les OH qui sont dans le voisinage
+                       mutate(OHref = i) #ajouter le numéro d'OH correspondant (autant de lignes par OH qu'il a de voisins)
+                     OH_voisins_long <- rbind(OH_voisins_long, tmp)
+                   })
+      #2.OH_voisins_wide_sum = chaque OH et le profil individuel de son voisinage
+      #sans les v_usage
+      OH_voisins_wide_sum <- OH_voisins_long %>% select(-OH_NUM, -V_USAGE) %>%
+        mutate(V_URB=paste("urb_",V_URB,sep=""),PORTEE=paste("p_",PORTEE,sep="")) %>% #pour que les catégories v_urb/portée (mêmes id) ne soient pas mélangées
+        melt(id.vars="OHref") %>%
+        dcast(OHref ~ value, length) %>%
+        as_tibble()
+      #ajouter les row où pas de voisinage
+      if (setdiff(OH_voisins$OH_NUM,OH_voisins_wide_sum$OHref)>1){
+      OH_voisins_wide_sum <- add_row(OH_voisins_wide_sum, OHref = setdiff(OH_voisins$OH_NUM,OH_voisins_wide_sum$OHref))
+      OH_voisins_wide_sum[is.na(OH_voisins_wide_sum)] <- 0}
+      #3. OH_voisinage
+      # tab OH +  colonne avec nombre d'OH de chaque type (valeur urbaine + portée) dans le voisinage au moment de l'apparition
+      OH_voisinage <- left_join(OH %>% select(OH_NUM, NOM, DATE_DEB, DATE_FIN, V_USAGE, V_URB, PORTEE, geom),
+                                OH_voisins_wide_sum,
+                                by=c("OH_NUM"="OHref"))
+      
+      tab_voisinage$voisins_tout <- OH_voisinage
+    }
+    
+    removeUI(selector="#charge_tab_voisin", immediate=FALSE)
+    insertUI(selector="#taille_tampon", 
+             where="afterEnd", 
+             ui=HTML('</br><span id=fini_tab_voisin> &nbsp &nbsp <i class="fas fa-check"></i> tableau prêt</span>' ),
+             immediate=FALSE)
+  })
+  #----------------------------------- #5.3.calcul du voisinage moyen de référence ----
+  
+  observe({
+    #structure du tableau
+    voisinages_moyens_ref <- data.frame(annee=NA, 
+                                        urb_1=NA, urb_2=NA, urb_3=NA, urb_4=NA, urb_5=NA, urb_6=NA,
+                                        p_1=NA, p_2=NA, p_3=NA, p_4=NA)
+    intervalle <- input$taille_intervalle/2
+    OH_voisinage <-OH_voisins_3P
+    
+    #remplissage du tableau
+    for(i in as.numeric(unique(OH_voisinage$DATE_DEB))){ 
+      tab_tmp <- OH_voisinage %>%
+        mutate(annee=i) %>% #ajout de l'année calculée
+        as_tibble()%>% 
+        filter(DATE_DEB>=i-intervalle & DATE_DEB<=i+intervalle) %>% #intervalle de temps autour de cette année
+        select(annee, urb_1, urb_2, urb_3, urb_4, urb_5, urb_6, p_1, p_2, p_3, p_4) %>% #choix des colonnes à conserver
+        group_by(annee) %>% summarise_all(list(mean))#moyenne par annee
+      
+      voisinages_moyens_ref <- rbind(voisinages_moyens_ref,tab_tmp) #ajout des lignes pour l'année au tableau entier
+    }
+    #suppression de tous les duplicatas
+    voisinages_moyens_ref <- voisinages_moyens_ref %>% distinct() 
+    ref_long <- voisinages_moyens_ref  %>% gather(key="type_voisins", value="ref", -annee) %>% 
+      mutate(type_g = if_else(grepl("^u",type_voisins), true="valeur urbaine", false="portee"))
+    
+    tab_voisinage$voisinage_ref <- ref_long
+    
+  })
+  
+  #----------------------------------- #5.4.voisinage moyen étudié et plots dans le temps ----
+  
+  observe({
+    
+    #subset des OH
+    val_usage <- lapply(
+      1:6,
+      function(i){
+        substring(
+          eval(parse(text=paste("input$picker_voisins_",i,sep=""))), #récupère toutes les options cochées
+          1,2 #ne garde que les deux premiers caractères (=les numéros)
+        )
+      }) %>% unlist %>% as.numeric
+    
+    val_portee <- input$portees_voisins
+    OH_etudie <- OH_voisins_3P %>% filter(V_USAGE %in% val_usage & PORTEE %in% val_portee & DATE_DEB >= -25)
+    
+    
+    #creation du tableau de voisinage
+    #structure du tableau
+    voisinages_moyens_etudie <- data.frame(annee=NA, 
+                                           urb_1=NA, urb_2=NA, urb_3=NA, urb_4=NA, urb_5=NA, urb_6=NA,
+                                           p_1=NA, p_2=NA, p_3=NA, p_4=NA)
+    intervalle <- input$taille_intervalle/2
+    #remplissage du tableau
+    for(i in as.numeric(unique(OH_etudie$DATE_DEB))){ 
+      tab_tmp <- OH_etudie %>%
+        mutate(annee=i) %>% #ajout de l'année calculée
+        as_tibble()%>% 
+        filter(DATE_DEB>=i-intervalle & DATE_DEB<=i+intervalle) %>% #intervalle de temps autour de cette année
+        select(annee, urb_1, urb_2, urb_3, urb_4, urb_5, urb_6, p_1, p_2, p_3, p_4) %>% #choix des colonnes à conserver
+        group_by(annee) %>% summarise_all(list(mean))#moyenne par annee
+      
+      voisinages_moyens_etudie <- rbind(voisinages_moyens_etudie,tab_tmp) #ajout des lignes pour l'année au tableau entier
+    }
+    #suppression de tous les duplicatas
+    voisinages_moyens_etudie <- voisinages_moyens_etudie %>% distinct() 
+    
+    #format long pour plot
+    etudie_long <- voisinages_moyens_etudie %>% 
+      gather(key="type_voisins", value="nombre_voisins",-annee) %>% 
+      mutate(type_g = if_else(grepl("^u",type_voisins), true="valeur urbaine", false="portee"))
+    
+    
+    #ajout du voisinage de référence
+    etudie_long <- etudie_long %>% 
+      left_join(tab_voisinage$voisinage_ref %>%  select(type_voisins, annee, ref),
+                b=c("type_voisins","annee")
+      ) %>% 
+      mutate(centre=nombre_voisins-ref)
+    
+    #enregistrement en reactive value
+    tab_voisinage$voisinage_etudie <- etudie_long
+    
+    #output plot absolu
+    output$plot_voisins_temps_absolu <- renderPlot(
+      ggplot(etudie_long) +
+        geom_segment(aes(x=annee, xend=annee, y=0, yend=nombre_voisins),
+                     color="grey",alpha=0.5, size=0.7)+
+        geom_point(aes(x=annee, y=nombre_voisins, color=type_voisins), alpha=0.8)+
+        scale_color_manual(values=palette_vurb_p)+
+        scale_x_continuous(breaks = c(1,seq(100,1900,100),2015), limits=c(-25, 2015))+
+        facet_grid(type_voisins~.)+
+        labs(title="Voisinage moyen absolu des OH",
+             subtitle=paste("OH de valeur d'usage :", paste(val_usage, sep = '', collapse = ', '), "; \net de portée :", paste(val_portee, sep = '', collapse = ', ')),
+             y = "nombre moyen de voisins par valeurs urbaine et portées",
+             x= "année",
+             caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, CITERES-LAT")+
+        theme_fivethirtyeight()+
+        theme_ln()+
+        theme(
+          axis.text.x = element_text(angle=90)
+        )
+    )
+    
+    #output plot relatif
+    output$plot_voisins_temps_relatif <- renderPlot(
+      ggplot(etudie_long) +
+        geom_hline(aes(yintercept = 0), color="darkgrey", size=1)+
+        geom_segment(aes(x=annee, xend=annee,yend=centre, y=0), 
+                     color="grey",alpha=0.5, size=0.7)+
+        geom_point(aes(x=annee, y=centre, color=type_voisins), alpha=0.8)+
+        scale_color_manual(values=palette_vurb_p)+
+        scale_x_continuous(breaks = c(1,seq(100,1900,100),2015), limits=c(-25, 2015))+
+        facet_grid(type_voisins~.)+
+        labs(title="Voisinage moyen centré-réduit des OH",
+             subtitle=paste("OH de valeur d'usage :", paste(val_usage, sep = '', collapse = ', '), " ; \net de portée :", paste(val_portee, sep = '', collapse = ', ')),
+             y = "variation autour de la moyenne (variables centrées-réduites)",
+             x= "année",
+             caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, CITERES-LAT")+
+        theme_fivethirtyeight()+
+        theme_ln()+
+        theme(
+          axis.text.x = element_text(angle=90)
+        )
+    )
+    
+  })
+  
+  #----------------------------------- #5.5.plots voisinage pour une année ----
+  
+  #mise à jour du slider pour analyse par état (choix uniquement des dates existantes)
+  observe({
+    updateSliderTextInput(session = session,
+                          inputId = "annee_voisin",
+                          choices=unique(tab_voisinage$voisinage_etudie$annee),
+                          selected = sample(unique(tab_voisinage$voisinage_etudie$annee),1)
+    )
+    
+  })
+  
+  
+  #mplots en fonction du slider
+  observe({
+    
+    date <- input$annee_voisin 
+    intervalle_min <- ceiling(date - input$taille_intervalle)
+    intervalle_max <- floor(date + input$taille_intervalle)
+    
+    #creation tableau
+    tab_voisins_annee <-tab_voisinage$voisinage_etudie %>% filter(annee== date)
+    
+    #voisinage absolu
+    output$plot_voisins_etat_absolu <- renderPlot(
+      ggplot(tab_voisins_annee)+
+        geom_segment(aes(x=ref, xend=nombre_voisins, y=type_voisins, yend=type_voisins),
+                     color="grey",alpha=0.5, size=0.7)+
+        geom_point(aes(x=ref, y=type_voisins),
+                   color="grey",size=4)+
+        geom_point(aes(x=nombre_voisins, y=type_voisins, color=type_voisins),
+                   size=4,alpha=0.7,stroke=0, shape=16)+
+        scale_color_manual(values=palette_vurb_p)+
+        facet_wrap(type_g ~., scales = "free",
+                   labeller=labeller(type_g=facet_labels_vois))+
+        labs(title=paste("Voisinage moyen absolu des OH entre",intervalle_min,"et", intervalle_max),
+             subtitle="en gris : voisinage de référence",
+             y = "type de voisins",
+             x= "nombre moyen de voisins",
+             caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, CITERES-LAT")+
+        theme_fivethirtyeight()+
+        theme_ln()+
+        theme(
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.y = element_line(linetype ="dotted", color ="grey75")
+        )
+      
+    )
+    
+    #voisinage relatif
+    output$plot_voisins_etat_relatif <- renderPlot(
+      ggplot(tab_voisins_annee)+
+        geom_segment(aes(x=0, xend=centre, y=type_voisins, yend=type_voisins),
+                     color="grey",alpha=0.5, size=0.7)+
+        geom_point(aes(x=0, y=type_voisins),
+                   color="grey",size=4)+
+        geom_point(aes(x=centre, y=type_voisins, color=type_voisins),
+                   size=4,alpha=0.7,stroke=0, shape=16)+
+        scale_color_manual(values=palette_vurb_p)+
+        facet_wrap(type_g ~., scales = "free",
+                   labeller=labeller(type_g=facet_labels_vois))+
+        labs(title=paste("Voisinage moyen absolu des OH entre",intervalle_min,"et", intervalle_max),
+             subtitle="en gris : voisinage de référence",
+             y = "type de voisins",
+             x= "variation autour de la moyenne (variables centrées-réduites)",
+             caption="L. Nahassia, Géographie-cités, 2019 | Sources : ToToPI, CITERES-LAT")+
+        theme_fivethirtyeight()+
+        theme_ln()+
+        theme(
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.major.y = element_line(linetype ="dotted", color ="grey75")
+        )
+      
+    )
+    
+    
+  })
+  
+  
+  
+  
+}) # fin du serveur
 
 
