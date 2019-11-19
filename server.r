@@ -1322,7 +1322,7 @@ shinyServer(function(input, output, session) {
   observe({
     updateSliderTextInput(session = session,
                           inputId = "annee_voisin",
-                          choices=unique(tab_voisinage$voisinage_etudie$annee),
+                          choices= sort(unique(tab_voisinage$voisinage_etudie$annee)),
                           selected = sample(unique(tab_voisinage$voisinage_etudie$annee),1)
     )
     

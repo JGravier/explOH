@@ -1,7 +1,0 @@
-{
-    "installOptions" : {
-        "installDependencies" : true,
-        "installFromRepository" : true,
-        "libraryPath" : "C:/Users/LUCIGARE DU PHARAON/Documents/R/R-3.5.2/library"
-    }
-}
